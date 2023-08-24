@@ -1,15 +1,14 @@
-# MiddleWare Installation GuideBook. (Manually)
+# 1. MiddleWare Installation GuideBook. (Manually)
 미들웨어 수동 설치 가이드를 기술합니다.
 
-
-# 3-tier list
+## M/W list
 |name |description |
 |---|---|
 |[WEB](https://github.com/chjr68/MiddleWare/tree/master/WEB) |Apache |
 |[WAS](https://github.com/chjr68/MiddleWare/tree/master/WAS) |Tomcat |
 |[DB](https://github.com/chjr68/MiddleWare/tree/master/DB) |MariaDB |
 
-# Auto Installation Script
+# 2. Auto Installation Script
 미들웨어 자동설치 스크립트 개발 후 업로드 예정
 
 1. <strong>OS</strong> 
