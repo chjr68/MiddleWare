@@ -9,9 +9,6 @@
 |[WAS](https://github.com/chjr68/MiddleWare/tree/master/WAS) |Tomcat |
 |[DB](https://github.com/chjr68/MiddleWare/tree/master/DB) |MariaDB |
 
-# BUGS
-Please report bugs to me
-
 # Auto Installation Script
 미들웨어 자동설치 스크립트 개발 후 업로드 예정
 
@@ -25,6 +22,9 @@ MySQL, PostgreSQL(추후)
 - 다이얼로그 기반 자동 설치 스크립트(GUI)
 - 실제 버전값 입력받아 아카이브에서 패키지 다운로드 (or 제공된 기본 패키지 버전 선택)
 - Install / Uninstall / Config / Log Level / 설치 경로 입력 / 취약점 고려
+
+# BUGS
+Please report bugs to me
 
 # AUTHOR
 
