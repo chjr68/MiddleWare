@@ -9,8 +9,7 @@
 |[DB](https://github.com/chjr68/MiddleWare/tree/master/3.DB) |MariaDB |
 
 # 2. Auto Installation Script
-미들웨어 자동설치 스크립트 개발 후 업로드 예정 <br>
-[작업공간](https://github.com/chjr68/MiddleWare/tree/master/Auto_Installation_MW/InstallMW)
+미들웨어 자동설치 스크립트 개발 후 업로드 예정
 
 1. <strong>OS</strong> 
 - CentOS <br>
