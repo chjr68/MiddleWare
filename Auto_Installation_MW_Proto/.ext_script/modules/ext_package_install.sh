@@ -62,28 +62,16 @@ function Install_Rpms()
 
         Progress=$(($Progress+$jump))
         
-        echo $Progress | tms_progress --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
+        echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
+
+
 
         #TODO: 불필요 rpm 구문 삭제, 전역변수 파일 CHKRPMLIST 내용도 수정
         case ${rpm_string} in
-            perl)
-                # perl-lib 설치 확인 후 perl 설치 수행
-                if [ -z "`rpm -qa perl-libs`" ]
-                then
-                    # perl 은 경로에 존재하는 모든 rpm 파일을 설치하는 방법 수행
-                    rpm -Uvh --replacefiles --replacepkgs ${g_path}/RPMS/perl/*.rpm  >> $RPM_LOG 2>&1 
-                fi
-                ;;
             net-tools)
                 if [ -z "`rpm -qa net-tools`" ]
                 then
                     rpm -Uvh ${g_path}/RPMS/core-rpms/net-tools-2.0-0.22.20131004git.el7.x86_64.rpm   >> $RPM_LOG 2>&1
-                fi
-                ;;
-            ntsysv)
-                if [ -z "`rpm -qa ntsysv`"    ]
-                then
-                    rpm -Uvh ${g_path}/RPMS/core-rpms/ntsysv-1.7.4-1.el7.x86_64.rpm  >> $RPM_LOG 2>&1 
                 fi
                 ;;
             tcpdump)
@@ -91,16 +79,6 @@ function Install_Rpms()
                 then
                     rpm -Uvh ${g_path}/RPMS/tcpdump/libpcap-1.5.3-11.el7.x86_64.rpm  >> $RPM_LOG 2>&1
                     rpm -Uvh ${g_path}/RPMS/tcpdump/tcpdump-4.9.2-3.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                fi
-                ;;
-            policycoreutils)
-                if [ -z "`rpm -qa policycoreutils`" ]
-                then
-                    rpm -Uvh ${g_path}/RPMS/policy-core-utils/libselinux-2.5-12.el7.x86_64.rpm   >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/policy-core-utils/libselinux-python-2.5-12.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/policy-core-utils/libselinux-utils-2.5-12.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/policy-core-utils/libsepol-2.5-8.1.el7.x86_64.rpm   >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/policy-core-utils/policycoreutils-2.5-22.el7.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;
             dialog)
@@ -119,28 +97,6 @@ function Install_Rpms()
                 if [ -z "`rpm -qa rdate`"   ]
                 then
                     rpm -Uvh ${g_path}/RPMS/ntp/rdate-1.4-25.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                fi
-                ;;
-            pcituils)
-                if [ -z "`rpm -qa pciutils`" ]
-                then
-                    rpm -Uvh ${g_path}/RPMS/core-rpms/pciutils-libs-3.5.1-3.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/core-rpms/pciutils-3.5.1-3.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                fi
-                ;;
-            smartmontools)
-                if [ -z "`rpm -qa smartmontools`" ]
-                then
-                    rpm -Uvh ${g_path}/RPMS/core-rpms/mailx-12.5-19.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/core-rpms/smartmontools-6.5-1.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                fi
-                ;;
-            fontconfig)
-                if [ -z "`rpm -qa fontconfig`" ]
-                then
-                    rpm -Uvh ${g_path}/RPMS/fontconfig/fontpackages-filesystem-1.44-8.el7.noarch.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/fontconfig/stix-fonts-1.1.0-5.el7.noarch.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/fontconfig/fontconfig-2.10.95-11.el7.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;
             ntp)
@@ -167,14 +123,6 @@ function Install_Rpms()
                 if [ -z "`rpm -qa wget`" ]
                 then
                     rpm -Uvh ${g_path}/RPMS/core-rpms/wget-1.14-15.el7_4.1.x86_64.rpm  >> $RPM_LOG 2>&1
-                fi
-                ;;
-            iptables-services) #2021.08.20 iptable 없음.
-                if [ -z "`rpm -qa iptables-services`" ]
-                then
-                    # iptables 설치 후 iptables-services 설치 필요
-                    rpm -Uvh ${g_path}/RPMS/core-rpms/iptables-1.4.21-28.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/core-rpms/iptables-services-1.4.21-28.el7.x86_64.rpm --nodeps  >> $RPM_LOG 2>&1
                 fi
                 ;;
             lsof)
@@ -234,13 +182,45 @@ function Install_Rpms()
                     rpm -Uvh ${g_path}/RPMS/mf_authenticate/tacacs/tac_plus-4.0.4.26-1.el6.nux.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;
-            MegaCli)
-                # 서버 HDD 상태 정보 수집을 위한 MegaCli rpm 설치
-                if [ -z "`rpm -qa MegaCli`" ]
-                then
-                    rpm -Uvh ${g_path}/RPMS/MegaCli/MegaCli-8.07.14-1.noarch.rpm  >> $RPM_LOG 2>&1
+            make)
+                #TODO: yum으로 기 설치된 패키지 확인하는 구문 작성필요
+                #make gcc gcc-c++ expat expat-devel java libaio ncurses
+                if [ -z "`rpm -qa make`" ]
+                then            
+                    #TODO: 폐쇄망에서 설치가능하도록, 의존성파일을 수동으로 받아놓기(추후)
+                    yum -y install make >> $RPM_LOG 2>&1
                 fi
-                ;;
+                ;;    
+            gcc) 
+                if [ -z "`rpm -qa gcc`" ]
+                then            
+                    yum -y install gcc gcc-c++ >> $RPM_LOG 2>&1
+                fi
+                ;;  
+            expat) 
+                if [ -z "`rpm -qa expat`" ]
+                then            
+                    yum -y install expat expat-devel >> $RPM_LOG 2>&1
+                fi
+                ;;      
+            java) 
+                if [ -z "`rpm -qa gcc`" ]
+                then            
+                    yum -y install java-11-openjdk-devel.x86_64 >> $RPM_LOG 2>&1
+                fi
+                ;;      
+            libaio) 
+                if [ -z "`rpm -qa gcc`" ]
+                then            
+                    yum -y install libaio >> $RPM_LOG 2>&1
+                fi
+                ;;      
+            ncurses) 
+                if [ -z "`rpm -qa gcc`" ]
+                then            
+                    yum -y install ncurses* >> $RPM_LOG 2>&1
+                fi
+                ;;    
         esac
     done
 
@@ -283,7 +263,7 @@ function Check_Rpms_Dependency()
 
         Progress=$(($Progress+$jump))
 
-        echo $Progress | tms_progress --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
+        echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
 
         if [ -z "`rpm -qa ${rpm_string}`" ]
         then

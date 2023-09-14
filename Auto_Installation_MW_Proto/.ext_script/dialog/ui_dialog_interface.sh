@@ -123,7 +123,64 @@ function Select_Mw_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --fselect package/  10 50 0 
+    local number=1
+    
+    case $MENU_OPT_MW_TYPE in
+        1) 
+            #WEB apache 파일 포맷: httpd-숫자.숫자.숫자
+            #정규표현식: '[0-9]{1,3}\-[0-9]{1,3}\-[0-9]{1,3}'
+            #mw_pwd: 파일위치 절대경로 확인 필요
+            #
+            local mw_pwd=`find /working_space/Auto_Installation_MW_Proto/package/1.WEB/ -maxdepth 1 | grep tar.gz | grep -Eo 'httpd-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+            ;;
+        2) 
+            #WAS tomcat 파일 포맷: apache-tomcat-숫자.숫자.숫자
+            local mw_pwd=`find /working_space/Auto_Installation_MW_Proto/package/2.WAS/ -maxdepth 1 | grep tar.gz | grep -Eo 'apache-tomcat-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+
+            ;;
+        3) 
+            #DB db 파일 포맷: mariadb-숫자.숫자.숫자
+            local mw_pwd=`find /working_space/Auto_Installation_MW_Proto/package/3.DB/ -maxdepth 1 | grep tar.gz | grep -Eo 'mariadb-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+            ;;   
+    esac
+
+    \cp -f /dev/null $TMPFILE
+
+    if [ `echo $mw_pwd | wc -w` -gt 0 ]
+    then
+        for list in $mw_pwd
+        do
+            echo "$number $list"  >> $TMPFILE
+            items[$number]=$list
+            ((number++))
+        done
+
+        #TODO: 복구 대상 디렉토리 선택 기능 필요
+        
+        dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Please Select The Middleware Version" 10 50 0 `cat $TMPFILE` 2>$OUTFILE
+
+        case $? in
+            1)
+                exit 1
+                ;;
+            255)
+                exit 1
+                ;;
+        esac
+
+        #TODO: item에 선택한 번호의 버전을 가져오고 싶음
+        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나?
+        item=$(<${OUTFILE})
+
+        MW_WEB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
+
+        # dst="${items[$item]}"
+
+        # #디렉토리 수동 선택
+        # [ ${MENU_UTIL_SELECT_RESTORE_DIR} -eq ${OPT_NONE} ] && dst="${items[$item]}" || dst="${AUTO_OPT_TMS_RESTORE_DIR}"
+    fi
+
+    #dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --fselect package/  10 50 0 
 
 
     Write_Log $FUNCNAME $LINENO "end"
@@ -149,40 +206,38 @@ function Input_Middleware_Install_Path()
     ex) ${INSTALL_PATH}\n"  
 
     #TODO: BACKTITLE 중괄호로 안감싸도되나?
-    Middleware_Menu_Input ${MENU_OPT_ENTER_FACTORY_INSTALL_PATH} ${AUTO_OPT_FACTORY_INSTALL_PATH} --title "${TITLE}" --backtitle "$BACKTITLE" --inputbox "${dialog_message}" 9 70 "${INSTALL_PATH}" 2> $OUTFILE
+    dialog --title "${TITLE}" --backtitle "$BACKTITLE" --inputbox "${dialog_message}" 9 70 "${INSTALL_PATH}" 2> $OUTFILE
 
     #선택한 경로로 업데이트
-    [ ${MENU_OPT_ENTER_FACTORY_INSTALL_PATH} -eq ${OPT_NONE} ] && INSTALL_PATH=$(<${OUTFILE}) || INSTALL_PATH=${AUTO_OPT_FACTORY_INSTALL_PATH}
-
-    #RMS Install Path, 입력된 값으로 변경해 준다.
-    RMS_ROOT_PATH="${INSTALL_PATH}/RMS/"
+    #[ ${MENU_OPT_ENTER_FACTORY_INSTALL_PATH} -eq ${OPT_NONE} ] && INSTALL_PATH=$(<${OUTFILE}) || INSTALL_PATH=${AUTO_OPT_FACTORY_INSTALL_PATH}
+    INSTALL_PATH=$(<${OUTFILE})
 
     Write_Log $FUNCNAME $LINENO "end"
 }
 
-function Show_Warning_Install_Path_Not_Exist()
-{
-    Write_Log $FUNCNAME $LINENO "start"
-
-    if [ -z ${TMS_INSTALL_PATH} ]
-    then
-        WRITE_LOG $FUNCNAME $LINENO "Middleware_Install_Path not exist, source ~/.bash_profile command"
-
-        local MSG="There is no Middleware Installation path.\
-                \nPlease check environment variable Middleware_Install_Path \
-                \n(Please run source ~/.bash_profile command)\
-                \nExit the Installer."
-        tms_dialog ${GOPT_SKIP_DIALOG_DEFAULT_OK} --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
-        
-        #2023.06.08 패치시 TMS_INSTALL_PATH 가 존재하지 않는 경우. 환경 변수 적용
-        ApplyEnvProfile
-
-        exit 1
-    fi
-
-    Write_Log $FUNCNAME $LINENO "end"
-
-}
+# function Show_Warning_Install_Path_Not_Exist()
+# {
+#     Write_Log $FUNCNAME $LINENO "start"
+#
+#     if [ -z ${TMS_INSTALL_PATH} ]
+#     then
+#         WRITE_LOG $FUNCNAME $LINENO "Middleware_Install_Path not exist, source ~/.bash_profile command"
+#
+#         local MSG="There is no Middleware Installation path.\
+#                 \nPlease check environment variable Middleware_Install_Path \
+#                 \n(Please run source ~/.bash_profile command)\
+#                 \nExit the Installer."
+#         tms_dialog ${GOPT_SKIP_DIALOG_DEFAULT_OK} --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+#     
+#         #2023.06.08 패치시 TMS_INSTALL_PATH 가 존재하지 않는 경우. 환경 변수 적용
+#         ApplyEnvProfile
+#
+#         exit 1
+#     fi
+#
+#     Write_Log $FUNCNAME $LINENO "end"
+#
+# }
 
 
 

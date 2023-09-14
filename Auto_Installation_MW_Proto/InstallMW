@@ -21,7 +21,7 @@ g_path=$( cd "$(dirname "$0")" ; pwd )
 source ${g_path}/.ext_script/global_define.sh #전역변수 지정
 
 #외부 패키지
-#source ${g_path}/.ext_script/modules/ext_package_install.sh #미들웨어 외부모듈 설치
+source ${g_path}/.ext_script/modules/ext_package_install.sh #미들웨어 외부모듈 설치
 
 #source ${g_path}/.ext_script/ext_modules/ext_tools_module.sh #기타 설치외 모듈
 
@@ -35,8 +35,8 @@ source ${g_path}/.ext_script/dialog/ui_dialog_interface.sh #UI 구성
 #메인설치
 source ${g_path}/.ext_script/main_install.sh
 
-#jump=2 #직관성을 위해서 전역으로
-#Progress=0
+jump=2 #직관성을 위해서 전역으로
+Progress=0
 
 #########################################################################################
 
@@ -44,7 +44,7 @@ function main()
 {
     #시스템 환경변수 초기화
     source ~/.bash_profile    
-    echo "test"
+
     Init_Log #로그 초기화
     Write_Log $FUNCNAME $LINENO "====================================== Middleware Installation STARTS (${DEF_PRODUCT_TYPE}) ============================="
    
@@ -55,7 +55,7 @@ function main()
     #Decompress_Rpms
 
     #rpms 설치 유무 확인 및 설치
-    #Check_Rpms_Dependency
+    Check_Rpms_Dependency
 
     #실제 설치 수행
     
