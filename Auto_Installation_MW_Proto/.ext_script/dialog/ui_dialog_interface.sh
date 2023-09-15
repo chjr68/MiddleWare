@@ -154,8 +154,6 @@ function Select_Mw_Version()
             items[$number]=$list
             ((number++))
         done
-
-        #TODO: 복구 대상 디렉토리 선택 기능 필요
         
         dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Please Select The Middleware Version" 10 50 0 `cat $TMPFILE` 2>$OUTFILE
 
@@ -168,11 +166,24 @@ function Select_Mw_Version()
                 ;;
         esac
 
-        #TODO: item에 선택한 번호의 버전을 가져오고 싶음
-        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나?
+        #TODO: item에 선택한 번호의 버전을 가져오고 싶음 (완료)
+        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나? 
         item=$(<${OUTFILE})
 
-        MW_WEB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
+        
+    #설치메뉴에 따라 버전명만 변수에 초기화
+    case $MENU_OPT_MW_TYPE in
+        1) 
+            MW_WEB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
+            ;;
+        2) 
+            MW_WAS_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
+            ;;
+        3) 
+            MW_DB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
+            ;;   
+    esac
+
 
         # dst="${items[$item]}"
 

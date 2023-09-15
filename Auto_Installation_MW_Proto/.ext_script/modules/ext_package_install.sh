@@ -34,6 +34,10 @@ function Delete_Rpms_Directory()
     # rpms.tar.gz 해제 파일 삭제
     rm -rf ${g_path}/rpms
 
+    #WEB module 압축 해제 디렉토리 삭제
+    ls -l ${g_path}/package/1.WEB/module | grep ^d | awk '{print $NF}' | xargs rm -rf
+
+
     Write_Log $FUNCNAME $LINENO "end"
 }
 
@@ -44,11 +48,11 @@ function Install_Rpms()
     local Progress=0
 
     #진행과정 로딩바 출력
-    local jump=$((100/`echo ${CHKRPMLIST} |wc -w`))
+    local jump=$((100/`echo ${CHKRPMLIST} | wc -w`))
 
     if [ $jump -eq 0 ]
     then
-        local jump=$((1000/`echo ${CHKRPMLIST} |wc -w`))
+        local jump=$((1000/`echo ${CHKRPMLIST} | wc -w`))
     fi
 
     # 해당 시스템의 공개키가 누락되었을 경우 발생되는 경고 메시지가 출력 되지 않도록 key 파일 import 수행
@@ -197,26 +201,39 @@ function Install_Rpms()
                     yum -y install gcc gcc-c++ >> $RPM_LOG 2>&1
                 fi
                 ;;  
+            gcc-c++) 
+            if [ -z "`rpm -qa gcc-c++`" ]
+            then            
+                yum -y install gcc-c++ >> $RPM_LOG 2>&1
+            fi
+            ;;  
             expat) 
                 if [ -z "`rpm -qa expat`" ]
                 then            
                     yum -y install expat expat-devel >> $RPM_LOG 2>&1
                 fi
                 ;;      
+            expat-devel) 
+                if [ -z "`rpm -qa expat-devel`" ]
+                then            
+                    yum -y install expat-devel >> $RPM_LOG 2>&1
+                fi
+                ;;      
+                    
             java) 
-                if [ -z "`rpm -qa gcc`" ]
+                if [ -z "`rpm -qa java`" ]
                 then            
                     yum -y install java-11-openjdk-devel.x86_64 >> $RPM_LOG 2>&1
                 fi
                 ;;      
             libaio) 
-                if [ -z "`rpm -qa gcc`" ]
+                if [ -z "`rpm -qa libaio`" ]
                 then            
                     yum -y install libaio >> $RPM_LOG 2>&1
                 fi
                 ;;      
             ncurses) 
-                if [ -z "`rpm -qa gcc`" ]
+                if [ -z "`rpm -qa ncurses`" ]
                 then            
                     yum -y install ncurses* >> $RPM_LOG 2>&1
                 fi
@@ -250,11 +267,11 @@ function Check_Rpms_Dependency()
 
     \cp -f /dev/null $OUTFILE
 
-    local jump=$((100/`echo ${CHKRPMLIST} |wc -w`))
+    local jump=$((100/`echo ${CHKRPMLIST} | wc -w`))
 
     if [ $jump -eq 0 ]
     then
-        local jump=$((1000/`echo ${CHKRPMLIST} |wc -w`))
+        local jump=$((1000/`echo ${CHKRPMLIST} | wc -w`))
     fi
 
     for rpm_string in $CHKRPMLIST

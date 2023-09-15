@@ -20,7 +20,7 @@ LOGFILE='/tmp/.install.log'
 TMPFILE='/tmp/.install.tmp'
 OUTFILE='/tmp/.install.out'
 
-INSTALL_PATH=/usr/local/src/apache
+INSTALL_PATH=/usr/local/src/web
 
 ############################################### 옵션 기본값
 
