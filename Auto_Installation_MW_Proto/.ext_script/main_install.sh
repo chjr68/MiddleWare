@@ -30,17 +30,20 @@ function Install_Middleware()
             Make_Dir
 
             #module install
-            Install_Web_Apr
-            Install_Web_Apr_Util
-            Install_Web_Pcre
+            Install_Apache_Apr
+            Install_Apache_Apr_Util
+            Install_Apache_Pcre
 
             #httpd install
-            Install_Web
+            Install_Apache
+
+            #config setting
+            Set_Apache_Config
             ;;
         2)
             Make_Dir
 
-            Install_Was
+            Install_Tomcat
             ;;
         3)
             Make_Dir
@@ -63,7 +66,7 @@ function ChkAlreadyInstalled()
 
     if [ -d ${INSTALL_PATH} ]
     then
-        MSG="Already installed. Do you want to go to main menu?"
+        MSG="Already exist. Do you want to go to main menu?"
 
         dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --yesno "$MSG" 7 80
 
@@ -104,7 +107,8 @@ function Make_Dir()
 #      Dialog Progress bar만 보이도록
 
 #TODO: Progress bar 모듈마다 작동하도록 (모듈1설치 1~100% -> 모듈2설치 1~100% ...)
-function Install_Web_Apr()
+#      config 및 환경변수 설정해주는 코드 작성
+function Install_Apache_Apr()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
@@ -121,8 +125,7 @@ function Install_Web_Apr()
     Write_Log $FUNCNAME $LINENO "end"
 }
 
-#TODO: apr-util 생성되지 않음(디렉토리가 삭제되나?). 해결필요
-function Install_Web_Apr_Util()
+function Install_Apache_Apr_Util()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
@@ -139,7 +142,7 @@ function Install_Web_Apr_Util()
     Write_Log $FUNCNAME $LINENO "end"
 }
 
-function Install_Web_Pcre()
+function Install_Apache_Pcre()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
@@ -156,16 +159,16 @@ function Install_Web_Pcre()
     Write_Log $FUNCNAME $LINENO "end"
 }
 
-function Install_Web()
+function Install_Apache()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
     MSG="Apache Install ( $MW_WEB_VERSION )"
     Progress=$(($Progress+$jump))
     echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
-    tar zxf ${g_path}/package/1.WEB/${MW_WEB_VERSION}.tar.gz -C $INSTALL_PATH
+    tar zxf ${g_path}/package/1.WEB/${MW_WEB_VERSION}.tar.gz -C ${g_path}/package/1.WEB
 
-    cd ${INSTALL_PATH}/${MW_WEB_VERSION}
+    cd ${g_path}/package/1.WEB/${MW_WEB_VERSION}
     ./configure --prefix=$INSTALL_PATH/apache2.4 \
     --enable-module=so --enable-rewrite --enable-so \
     --with-apr=$INSTALL_PATH/apr \
@@ -178,12 +181,76 @@ function Install_Web()
     Write_Log $FUNCNAME $LINENO "end"
 }
 
-function Install_Was()
+function Set_Apache_Config()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    mkdir -p ${INSTALL_PATH}
+    #서비스 등록
+    #TODO: 이부분 잘 안되는듯, 서비스 재시작 에러나서 ps로 UID확인 및 4개프로세스 킬하면 재시작 잘됨
+    cp $INSTALL_PATH/apache2.4/bin/apachectl /etc/init.d/httpd
+    echo -e "\n# \n
+    # chkconfig: 2345 90 90\n
+    # description: init file for Apache server daemon \n
+    # processname: $INSTALL_PATH/apache2.4/bin/apachectl \n
+    # config: $INSTALL_PATH/apache2.4/conf/httpd.conf \n
+    # pidfile: $INSTALL_PATH/apache2.4/logs/httpd.pid \n
+    #" >> /etc/init.d/httpd
 
+    chkconfig --add httpd
+
+    #서비스 종료
+    #TODO: 서비스없을떄 예외처리
+    #ps -ef | grep httpd | awk '{print $2}' | xargs kill -9
+
+    #서비스 시작
+    systemctl restart httpd
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Install_Tomcat()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    MSG="Tomcat Install ( $MW_WAS_VERSION )"
+    Progress=$(($Progress+$jump))
+    echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
+    tar zxf ${g_path}/package/2.WAS/${MW_WAS_VERSION}.tar.gz -C ${INSTALL_PATH}
+
+    JAVA_VERSION=`rpm -qa | grep -E 'java-[0-9]{1,2}\-openjdk\-[0-9]{1,2}\.'`
+
+    #TODO: java 버전바뀌는거 체크해야 됨, 이미 환경변수 있을경우 패스하는 로직, 자바경로 자동으로 찾아서 넣어주는 로직
+    echo -e "\nexport JAVA_HOME=/usr/lib/jvm/$JAVA_VERSION" >> /etc/profile
+    source /etc/profile
+
+    touch /etc/systemd/system/tomcat.service
+
+    #중간 java버전 확인 필요
+    echo -e "# Systemd unit file for tomcat \n
+[Unit]
+Description=Apache Tomcat Web Application Container
+After=syslog.target network.target \n
+[Service] 
+Type=forking \n
+Environment="JAVA_HOME=/usr/lib/jvm/$JAVA_VERSION"
+Environment="CATALINA_HOME=$INSTALL_PATH/$MW_WAS_VERSION"
+Environment="CATALINA_BASE=$INSTALL_PATH/$MW_WAS_VERSION"
+Environment="CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC"
+Environment="JAVA_OPTS=-Djava.security.egd=file:///dev/urandom" \n
+ExecStart=$INSTALL_PATH/$MW_WAS_VERSION/bin/startup.sh
+ExecStop=$INSTALL_PATH/$MW_WAS_VERSION/bin/shutdown.sh \n
+User=root
+Group=root
+UMask=0007
+RestartSec=10
+Restart=always \n
+[Install]
+WantedBy=multi-user.target" > /etc/systemd/system/tomcat.service
+
+    systemctl daemon-reload
+    systemctl enable tomcat
+    systemctl restart tomcat
+    
     Write_Log $FUNCNAME $LINENO "end"
 }
 

@@ -20,7 +20,7 @@ LOGFILE='/tmp/.install.log'
 TMPFILE='/tmp/.install.tmp'
 OUTFILE='/tmp/.install.out'
 
-INSTALL_PATH=/usr/local/src/web
+INSTALL_PATH=/usr/local/src
 
 ############################################### 옵션 기본값
 
@@ -56,6 +56,9 @@ MENU_OPT_MW_TYPE=${OPT_NONE} # 1:WEB, 2:WAS, 3:DB, ${OPT_NONE} : DIALOG
 MW_WEB_VERSION=${OPT_NONE}
 MW_WAS_VERSION=${OPT_NONE}
 MW_DB_VERSION=${OPT_NONE}
+
+#모듈 버전 (완전 자동화 할 때 개선필요)
+JAVA_VERSION=${OPT_NONE}
 
 #* DISK 파티션 자동 선택
 MENU_OPT_SELECT_DISK_PARTITION=${OPT_NONE} #1: 자동 선택, ${OPT_NONE} : DIALOG

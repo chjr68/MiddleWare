@@ -131,16 +131,16 @@ function Select_Mw_Version()
             #정규표현식: '[0-9]{1,3}\-[0-9]{1,3}\-[0-9]{1,3}'
             #mw_pwd: 파일위치 절대경로 확인 필요
             #
-            local mw_pwd=`find /working_space/Auto_Installation_MW_Proto/package/1.WEB/ -maxdepth 1 | grep tar.gz | grep -Eo 'httpd-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+            local mw_pwd=`find $g_path/package/1.WEB/ -maxdepth 1 | grep tar.gz | grep -Eo 'httpd-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
             ;;
         2) 
             #WAS tomcat 파일 포맷: apache-tomcat-숫자.숫자.숫자
-            local mw_pwd=`find /working_space/Auto_Installation_MW_Proto/package/2.WAS/ -maxdepth 1 | grep tar.gz | grep -Eo 'apache-tomcat-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+            local mw_pwd=`find $g_path/package/2.WAS/ -maxdepth 1 | grep tar.gz | grep -Eo 'apache-tomcat-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
 
             ;;
         3) 
             #DB db 파일 포맷: mariadb-숫자.숫자.숫자
-            local mw_pwd=`find /working_space/Auto_Installation_MW_Proto/package/3.DB/ -maxdepth 1 | grep tar.gz | grep -Eo 'mariadb-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+            local mw_pwd=`find $g_path/package/3.DB/ -maxdepth 1 | grep tar.gz | grep -Eo 'mariadb-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
             ;;   
     esac
 
@@ -183,8 +183,6 @@ function Select_Mw_Version()
             MW_DB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
             ;;   
     esac
-
-
         # dst="${items[$item]}"
 
         # #디렉토리 수동 선택
@@ -208,10 +206,10 @@ function Input_Middleware_Install_Path()
     
     #2023.03.13 #115619 최초 설치시 인스톨이 진행되지 않는 현상. 자동 설치 옵션의 값이 비어서 발생.
     #자동 설치 옵션이 비었을 경우, 고정 경로 값으로 진행
-    if [ -z ${TMS_INSTALL_PATH} ]
-    then
-        AUTO_OPT_FACTORY_INSTALL_PATH=${INSTALL_PATH} #설치 경로
-    fi
+    # if [ -z ${TMS_INSTALL_PATH} ]
+    # then
+    #     AUTO_OPT_FACTORY_INSTALL_PATH=${INSTALL_PATH} #설치 경로
+    # fi
 
     local dialog_message="Please Enter Middleware Install Path \n\
     ex) ${INSTALL_PATH}\n"  
@@ -220,7 +218,6 @@ function Input_Middleware_Install_Path()
     dialog --title "${TITLE}" --backtitle "$BACKTITLE" --inputbox "${dialog_message}" 9 70 "${INSTALL_PATH}" 2> $OUTFILE
 
     #선택한 경로로 업데이트
-    #[ ${MENU_OPT_ENTER_FACTORY_INSTALL_PATH} -eq ${OPT_NONE} ] && INSTALL_PATH=$(<${OUTFILE}) || INSTALL_PATH=${AUTO_OPT_FACTORY_INSTALL_PATH}
     INSTALL_PATH=$(<${OUTFILE})
 
     Write_Log $FUNCNAME $LINENO "end"

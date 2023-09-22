@@ -71,6 +71,7 @@ function Install_Rpms()
 
 
         #TODO: 불필요 rpm 구문 삭제, 전역변수 파일 CHKRPMLIST 내용도 수정
+        #      추후 폐쇄망에서 사용가능하도록 의존성파일 rpm 화
         case ${rpm_string} in
             net-tools)
                 if [ -z "`rpm -qa net-tools`" ]
@@ -219,11 +220,11 @@ function Install_Rpms()
                     yum -y install expat-devel >> $RPM_LOG 2>&1
                 fi
                 ;;      
-                    
             java) 
-                if [ -z "`rpm -qa java`" ]
+                if [ -z "`rpm -qa java-11-openjdk`" ]
                 then            
                     yum -y install java-11-openjdk-devel.x86_64 >> $RPM_LOG 2>&1
+                    JAVA_VERSION=`rpm -qa | grep -E 'java-[0-9]{1,2}\-openjdk\-[0-9]{1,2}\.'`
                 fi
                 ;;      
             libaio) 
