@@ -51,6 +51,7 @@ GOPT_SKIP_DIALOG_DEFAULT_OK=${OPT_NONE} #0: yes 선택, 1: no 선택, ${OPT_NONE
 #* 설치메인 메뉴 선택
 MENU_OPT_MAIN_INSTALL=${OPT_NONE} # 1:Install Middleware, 2:Show Version, 3:UnInstall.. ${OPT_NONE} : DIALOG
 MENU_OPT_MW_TYPE=${OPT_NONE} # 1:WEB, 2:WAS, 3:DB, ${OPT_NONE} : DIALOG
+MENU_OPT_DB_TYPE=${OPT_NONE} # 1:MariaDB, 2:MySQL, 3:PostgreSQL, ${OPT_NONE} : DIALOG
 
 # 미들웨어 버전
 MW_WEB_VERSION=${OPT_NONE}

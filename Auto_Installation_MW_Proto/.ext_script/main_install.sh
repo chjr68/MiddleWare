@@ -53,7 +53,7 @@ function Install_Middleware()
     esac
 
     local MSG="Installation finished.\
-    \nGo back to the main menu"
+    \nTerminate menu"
 
     dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
@@ -111,6 +111,7 @@ function Make_Dir()
 function Install_Apache_Apr()
 {
     Write_Log $FUNCNAME $LINENO "start"
+    local jump=0
 
     MSG="Apr Install ( apr-1.7.4 )"
     Progress=$(($Progress+$jump))
@@ -128,6 +129,7 @@ function Install_Apache_Apr()
 function Install_Apache_Apr_Util()
 {
     Write_Log $FUNCNAME $LINENO "start"
+    local jump=25
 
     MSG="Apr-Util Install ( apr-util-1.6.3 )"
     Progress=$(($Progress+$jump))
@@ -145,6 +147,7 @@ function Install_Apache_Apr_Util()
 function Install_Apache_Pcre()
 {
     Write_Log $FUNCNAME $LINENO "start"
+    local jump=25
 
     MSG="Pcre Install ( pcre-8.45 )"
     Progress=$(($Progress+$jump))
@@ -162,6 +165,7 @@ function Install_Apache_Pcre()
 function Install_Apache()
 {
     Write_Log $FUNCNAME $LINENO "start"
+    local jump=25
 
     MSG="Apache Install ( $MW_WEB_VERSION )"
     Progress=$(($Progress+$jump))
@@ -169,11 +173,11 @@ function Install_Apache()
     tar zxf ${g_path}/package/1.WEB/${MW_WEB_VERSION}.tar.gz -C ${g_path}/package/1.WEB
 
     cd ${g_path}/package/1.WEB/${MW_WEB_VERSION}
-    ./configure --prefix=$INSTALL_PATH/apache2.4 \
+    ./configure --prefix=$INSTALL_PATH/apache \
     --enable-module=so --enable-rewrite --enable-so \
     --with-apr=$INSTALL_PATH/apr \
     --with-apr-util=$INSTALL_PATH/apr-util \
-    --with-pcre=$INSTALL_PATH/pcre/pcre-config \
+    --with-pcre=$INSTALL_PATH/pcre/bin/pcre-config \
     --enable-mods-shared=all > /dev/null 2>&1
     make > /dev/null 2>&1
     make install > /dev/null 2>&1
@@ -185,22 +189,42 @@ function Set_Apache_Config()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    #서비스 등록
     #TODO: 이부분 잘 안되는듯, 서비스 재시작 에러나서 ps로 UID확인 및 4개프로세스 킬하면 재시작 잘됨
-    cp $INSTALL_PATH/apache2.4/bin/apachectl /etc/init.d/httpd
-    echo -e "\n# \n
-    # chkconfig: 2345 90 90\n
-    # description: init file for Apache server daemon \n
-    # processname: $INSTALL_PATH/apache2.4/bin/apachectl \n
-    # config: $INSTALL_PATH/apache2.4/conf/httpd.conf \n
-    # pidfile: $INSTALL_PATH/apache2.4/logs/httpd.pid \n
-    #" >> /etc/init.d/httpd
-
+    cp $INSTALL_PATH/apache/bin/apachectl /etc/init.d/httpd
+    echo -e "\n#
+# chkconfig: 2345 90 90
+# description: init file for Apache server daemon
+# processname: $INSTALL_PATH/apache/bin/apachectl
+# config: $INSTALL_PATH/apache/conf/httpd.conf
+# pidfile: $INSTALL_PATH/apache/logs/httpd.pid
+#" >> /etc/init.d/httpd
     chkconfig --add httpd
+
+    touch /etc/systemd/system/httpd.service
+
+    #서비스 등록
+    echo -e "[Unit]
+Description=apache
+After=network.target syslog.target
+
+[Service]
+Type=forking
+User=root
+Group=root
+
+ExecStart=$INSTALL_PATH/apache/bin/apachectl start
+ExecStop=$INSTALL_PATH/apache/bin/apachectl stop
+
+Umask=007
+RestartSec=10
+Restart=always
+
+[Install]
+WantedBy=multi-user.target" >> /etc/systemd/system/httpd.service
 
     #서비스 종료
     #TODO: 서비스없을떄 예외처리
-    #ps -ef | grep httpd | awk '{print $2}' | xargs kill -9
+    ps -ef | grep httpd | awk '{print $2}' | xargs kill -9
 
     #서비스 시작
     systemctl restart httpd

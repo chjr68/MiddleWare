@@ -53,6 +53,11 @@ function main()
 
     #rpms.tar.gz 파일 압축 해제
     #Decompress_Rpms
+    
+    #필수 모듈 설치
+    [ -z "`rpm -qa dialog`" ] && rpm -Uvh ${g_path}/rpms/core-rpms/dialog-1.2-4.20130523.el7.x86_64.rpm 2>&1 >> $LOGFILE
+    #[ -z "`rpm -qa dialog`" ] && yum -y install dialog
+    [ -z "`rpm -qa net-tools`" ] && rpm -Uvh ${g_path}/rpms/core-rpms/net-tools-2.0-0.22.20131004git.el7.x86_64.rpm  2>&1 > $LOGFILE
 
     #rpms 설치 유무 확인 및 설치
     Check_Rpms_Dependency

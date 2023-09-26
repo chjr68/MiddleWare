@@ -76,115 +76,115 @@ function Install_Rpms()
             net-tools)
                 if [ -z "`rpm -qa net-tools`" ]
                 then
-                    rpm -Uvh ${g_path}/RPMS/core-rpms/net-tools-2.0-0.22.20131004git.el7.x86_64.rpm   >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/core-rpms/net-tools-2.0-0.22.20131004git.el7.x86_64.rpm   >> $RPM_LOG 2>&1
                 fi
                 ;;
             tcpdump)
                 if [ -z "`rpm -qa tcpdump`" ]
                 then
-                    rpm -Uvh ${g_path}/RPMS/tcpdump/libpcap-1.5.3-11.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/tcpdump/tcpdump-4.9.2-3.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/tcpdump/libpcap-1.5.3-11.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/tcpdump/tcpdump-4.9.2-3.el7.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;
             dialog)
                 if [ -z "`rpm -qa dialog`"  ]
                 then
-                    rpm -Uvh ${g_path}/RPMS/core-rpms/dialog-1.2-4.20130523.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/core-rpms/dialog-1.2-4.20130523.el7.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;
             ntpdate)
                 if [ -z "`rpm -qa ntpdate`" ]
                 then
-                    rpm -Uvh ${g_path}/RPMS/ntp/ntpdate-4.2.6p5-28.el7.centos.x86_64.rpm --nodeps  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/ntp/ntpdate-4.2.6p5-28.el7.centos.x86_64.rpm --nodeps  >> $RPM_LOG 2>&1
                 fi
                 ;;
             rdate)
                 if [ -z "`rpm -qa rdate`"   ]
                 then
-                    rpm -Uvh ${g_path}/RPMS/ntp/rdate-1.4-25.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/ntp/rdate-1.4-25.el7.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;
             ntp)
                 if [ -z "`rpm -qa ntp`" ]
                 then
-                    rpm -Uvh ${g_path}/RPMS/ntp/ntpdate-4.2.6p5-28.el7.centos.x86_64.rpm --nodeps  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/ntp/autogen-libopts-5.18-5.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/ntp/ntp-4.2.6p5-28.el7.centos.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/ntp/ntpdate-4.2.6p5-28.el7.centos.x86_64.rpm --nodeps  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/ntp/autogen-libopts-5.18-5.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/ntp/ntp-4.2.6p5-28.el7.centos.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;
             sshpass)
                 if [ -z "`rpm -qa sshpass`" ]
                 then
-                    rpm -Uvh ${g_path}/RPMS/core-rpms/sshpass-1.06-2.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/core-rpms/sshpass-1.06-2.el7.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;
             gdb)
                 if [ -z "`rpm -qa gdb`" ]
                 then
-                    rpm -Uvh ${g_path}/RPMS/core-rpms/gdb-7.6.1-110.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/core-rpms/gdb-7.6.1-110.el7.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;
             wget)
                 if [ -z "`rpm -qa wget`" ]
                 then
-                    rpm -Uvh ${g_path}/RPMS/core-rpms/wget-1.14-15.el7_4.1.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/core-rpms/wget-1.14-15.el7_4.1.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;
             lsof)
                 if [ -z "`rpm -qa lsof`" ]
                 then
-                    rpm -Uvh ${g_path}/RPMS/core-rpms/lsof-4.87-4.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/core-rpms/lsof-4.87-4.el7.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;
             ipmitool)
                 if [ -z "`rpm -qa ipmitool`" ]
                 then
-                    rpm -Uvh ${g_path}/RPMS/ipmitool/net-snmp-libs-5.7.2-49.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/ipmitool/net-snmp-libs-5.7.2-49.el7.x86_64.rpm  >> $RPM_LOG 2>&1
                          
-                    rpm -Uvh ${g_path}/RPMS/ipmitool/OpenIPMI-2.0.27-1.el7.x86_64.rpm --nodeps  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/ipmitool/OpenIPMI-libs-2.0.27-1.el7.x86_64.rpm --nodeps  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/ipmitool/OpenIPMI-modalias-2.0.27-1.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/ipmitool/ipmitool-1.8.18-9.el7_7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/ipmitool/OpenIPMI-2.0.27-1.el7.x86_64.rpm --nodeps  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/ipmitool/OpenIPMI-libs-2.0.27-1.el7.x86_64.rpm --nodeps  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/ipmitool/OpenIPMI-modalias-2.0.27-1.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/ipmitool/ipmitool-1.8.18-9.el7_7.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;             
             ldap)
                 if [ -z "`rpm -qa openldap-servers-sql`" ]
                 then            
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/ldap/openldap-2.4.44-23.el7_9.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/ldap/compat-openldap-2.3.43-5.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/ldap/openldap-clients-2.4.44-23.el7_9.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/ldap/openldap-2.4.44-23.el7_9.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/ldap/compat-openldap-2.3.43-5.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/ldap/openldap-clients-2.4.44-23.el7_9.x86_64.rpm  >> $RPM_LOG 2>&1
 
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/ldap/libtool-ltdl-2.4.2-22.el7_3.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/ldap/openldap-servers-2.4.44-23.el7_9.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/ldap/unixODBC-2.3.1-14.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/ldap/cyrus-sasl-lib-2.1.26-23.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/ldap/cyrus-sasl-2.1.26-23.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/ldap/cyrus-sasl-devel-2.1.26-23.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/ldap/openldap-devel-2.4.44-23.el7_9.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/ldap/openldap-servers-sql-2.4.44-23.el7_9.x86_64.rpm  >> $RPM_LOG 2>&1                 
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/ldap/libtool-ltdl-2.4.2-22.el7_3.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/ldap/openldap-servers-2.4.44-23.el7_9.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/ldap/unixODBC-2.3.1-14.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/ldap/cyrus-sasl-lib-2.1.26-23.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/ldap/cyrus-sasl-2.1.26-23.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/ldap/cyrus-sasl-devel-2.1.26-23.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/ldap/openldap-devel-2.4.44-23.el7_9.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/ldap/openldap-servers-sql-2.4.44-23.el7_9.x86_64.rpm  >> $RPM_LOG 2>&1                 
                 fi					
                 ;;   
             radius)
                 if [ -z "`rpm -qa freeradius-utils`" ]
                 then            
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/radius/libtalloc-2.1.16-1.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/radius/apr-1.4.8-7.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/radius/boost-system-1.53.0-28.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/radius/apr-util-1.5.2-6.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/radius/xerces-c-3.1.1-10.el7_7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/radius/log4cxx-0.10.0-16.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/radius/boost-thread-1.53.0-28.el7.x86_64.rpm  >> $RPM_LOG 2>&1  
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/radius/tncfhh-utils-0.8.3-16.el7.x86_64.rpm  >> $RPM_LOG 2>&1 
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/radius/tncfhh-0.8.3-16.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/radius/tncfhh-libs-0.8.3-16.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/radius/freeradius-3.0.13-15.el7.x86_64.rpm  >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/radius/freeradius-utils-3.0.13-15.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/radius/libtalloc-2.1.16-1.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/radius/apr-1.4.8-7.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/radius/boost-system-1.53.0-28.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/radius/apr-util-1.5.2-6.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/radius/xerces-c-3.1.1-10.el7_7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/radius/log4cxx-0.10.0-16.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/radius/boost-thread-1.53.0-28.el7.x86_64.rpm  >> $RPM_LOG 2>&1  
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/radius/tncfhh-utils-0.8.3-16.el7.x86_64.rpm  >> $RPM_LOG 2>&1 
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/radius/tncfhh-0.8.3-16.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/radius/tncfhh-libs-0.8.3-16.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/radius/freeradius-3.0.13-15.el7.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/radius/freeradius-utils-3.0.13-15.el7.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;   
             tacacs)
                 if [ -z "`rpm -qa tac_plus`" ]
                 then            
-                    rpm -Uvh ${g_path}/RPMS/mf_authenticate/tacacs/tac_plus-4.0.4.26-1.el6.nux.x86_64.rpm  >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/mf_authenticate/tacacs/tac_plus-4.0.4.26-1.el6.nux.x86_64.rpm  >> $RPM_LOG 2>&1
                 fi
                 ;;
             make)
@@ -211,7 +211,7 @@ function Install_Rpms()
             expat) 
                 if [ -z "`rpm -qa expat`" ]
                 then            
-                    yum -y install expat expat-devel >> $RPM_LOG 2>&1
+                    yum -y install expat >> $RPM_LOG 2>&1
                 fi
                 ;;      
             expat-devel) 
@@ -224,7 +224,6 @@ function Install_Rpms()
                 if [ -z "`rpm -qa java-11-openjdk`" ]
                 then            
                     yum -y install java-11-openjdk-devel.x86_64 >> $RPM_LOG 2>&1
-                    JAVA_VERSION=`rpm -qa | grep -E 'java-[0-9]{1,2}\-openjdk\-[0-9]{1,2}\.'`
                 fi
                 ;;      
             libaio) 
