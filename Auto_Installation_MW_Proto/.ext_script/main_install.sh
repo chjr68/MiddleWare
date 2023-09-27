@@ -29,21 +29,12 @@ function Install_Middleware()
         1)
             Make_Dir
 
-            #module install
-            Install_Apache_Apr
-            Install_Apache_Apr_Util
-            Install_Apache_Pcre
-
-            #httpd install
-            Install_Apache
-
-            #config setting
-            Set_Apache_Config
+            Install_Web
             ;;
         2)
             Make_Dir
 
-            Install_Tomcat
+            Install_Was
             ;;
         3)
             Make_Dir
@@ -108,6 +99,29 @@ function Make_Dir()
 
 #TODO: Progress bar 모듈마다 작동하도록 (모듈1설치 1~100% -> 모듈2설치 1~100% ...)
 #      config 및 환경변수 설정해주는 코드 작성
+function Install_Web()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    case $MENU_OPT_WEB_TYPE in
+        1) 
+            #module install
+            Install_Apache_Apr
+            Install_Apache_Apr_Util
+            Install_Apache_Pcre
+
+            #httpd install
+            Install_Apache
+
+            #config setting
+            Set_Apache_Config
+            ;;
+    esac
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+
 function Install_Apache_Apr()
 {
     Write_Log $FUNCNAME $LINENO "start"
@@ -200,8 +214,6 @@ function Set_Apache_Config()
 #" >> /etc/init.d/httpd
     chkconfig --add httpd
 
-    touch /etc/systemd/system/httpd.service
-
     #서비스 등록
     echo -e "[Unit]
 Description=apache
@@ -220,14 +232,31 @@ RestartSec=10
 Restart=always
 
 [Install]
-WantedBy=multi-user.target" >> /etc/systemd/system/httpd.service
+WantedBy=multi-user.target" > /etc/systemd/system/httpd.service
 
     #서비스 종료
     #TODO: 서비스없을떄 예외처리
-    ps -ef | grep httpd | awk '{print $2}' | xargs kill -9
+    if [ `ps -ef | grep httpd | wc -l` -gt 1 ]
+    then
+        ps -ef | grep httpd | awk '{print $2}' | xargs kill -9
+    fi
 
     #서비스 시작
+    systemctl daemon-reload
     systemctl restart httpd
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Install_Was()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    case $MENU_OPT_WAS_TYPE in
+        1) 
+            Install_Tomcat
+            ;;
+    esac
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -244,10 +273,11 @@ function Install_Tomcat()
     JAVA_VERSION=`rpm -qa | grep -E 'java-[0-9]{1,2}\-openjdk\-[0-9]{1,2}\.'`
 
     #TODO: java 버전바뀌는거 체크해야 됨, 이미 환경변수 있을경우 패스하는 로직, 자바경로 자동으로 찾아서 넣어주는 로직
-    echo -e "\nexport JAVA_HOME=/usr/lib/jvm/$JAVA_VERSION" >> /etc/profile
-    source /etc/profile
-
-    touch /etc/systemd/system/tomcat.service
+    if [ `cat /etc/profile | grep "export JAVA_HOME=" | wc -l` -eq 0 ]
+    then
+        echo -e "\nexport JAVA_HOME=/usr/lib/jvm/$JAVA_VERSION" >> /etc/profile
+        source /etc/profile
+    fi
 
     #중간 java버전 확인 필요
     echo -e "# Systemd unit file for tomcat \n
@@ -281,6 +311,129 @@ WantedBy=multi-user.target" > /etc/systemd/system/tomcat.service
 function Install_Db()
 {
     Write_Log $FUNCNAME $LINENO "start"
+
+    case $MENU_OPT_DB_TYPE in
+        1) 
+            Install_Mariadb
+            ;;
+        2)
+            Install_Mysql
+            ;;
+        3)
+            Install_Postgresql
+            ;;
+
+    esac
+
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Install_Mariadb()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    #TODO: Progressbar 하드코딩 말고 로직 변경
+    local jump=50
+
+    MSG="MariaDB Install ( $MW_DB_VERSION )"
+    Progress=$(($Progress+$jump))
+    echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
+    tar zxf ${g_path}/package/3.DB/MariaDB/${MW_DB_VERSION}-linux-systemd-x86_64.tar.gz -C ${INSTALL_PATH}
+
+    mv ${INSTALL_PATH}/${MW_DB_VERSION}-linux-systemd-x86_64 ${INSTALL_PATH}/${MW_DB_VERSION}
+    
+    #사용자 생성
+    if [ `cat /etc/group | grep mariadb | wc -l` -eq 0 ]
+    then
+        groupadd mariadb
+        useradd -g mariadb mariadb
+    fi
+
+    #디렉토리 생성 및 권한 변경
+    mkdir -p /data/mariadb/master
+    mkdir -p /data/mariadb/ibdata
+    mkdir -p /data/mariadb/iblog
+    mkdir -p /data/mariadb/log-bin
+    chown -R mariadb.mariadb /data/mariadb          
+    
+    touch /var/log/mariadb.log
+    chmod 644 /var/log/mariadb.log
+    chown mariadb:mariadb /var/log/mariadb.log
+
+    cp $INSTALL_PATH/$MW_DB_VERSION/support-files/mysql.server /etc/init.d/mariadb.service
+
+    #TODO: sed명령어 쓸때 변수못집어넣나? ex) $INSTALL_PATH (큰따옴표 쓰면 됨)
+    #sed로 파일 내용 안바뀜. 확인필요
+    
+    sed -n -e "/^basedir=$/s/basedir=/basedir=$INSTALL_PATH\/$MW_DB_VERSION/g" /etc/init.d/mariadb.service
+    sed -n -e "/^datadir=$/s/datadir=/datadir=\/data\/mariadb\/master/g" /etc/init.d/mariadb.service
+
+    if [ `cat /etc/profile | grep "export PATH=" | wc -l` -eq 0 ]
+    then
+        echo -e "\nexport PATH=${PATH}:/usr/local/src/mariadb/bin" >> /etc/profile
+        source /etc/profile
+    fi
+
+    echo -e "# Mariadb
+[server]
+
+# mysqld standalone daemon
+[mysqld]
+port                            = 3306
+datadir                         = /data/mariadb/master
+socket                          = /tmp/mysql.sock
+
+# Character set (utf8mb4)
+character_set-client-handshake  = FALSE
+character-set-server            = utf8mb4
+collation_server                = utf8mb4_general_ci
+init_connect                    = set collation_connection=utf8mb4_general_ci
+init_connect                    = set names utf8mb4
+
+# Common
+table_open_cache                = 2048
+max_allowed_packet              = 32M
+binlog_cache_size               = 1M
+max_heap_table_size             = 64M
+read_buffer_size                = 64M
+read_rnd_buffer_size            = 16M
+sort_buffer_size                = 8M
+join_buffer_size                = 8M
+ft_min_word_len                 = 4
+lower_case_table_names          = 1
+default-storage-engine          = innodb
+thread_stack                    = 240K
+transaction_isolation           = READ-COMMITTED
+tmp_table_size                  = 32M
+
+# Connection
+max_connections                 = 200
+max_connect_errors              = 50
+back_log                        = 100
+thread_cache_size               = 100
+
+# Query Cache
+query_cache_size                = 32M
+query_cache_limit               = 2M
+
+log-bin                         = /data/mariadb/log-bin/mysql-bin" > /etc/my.cnf
+
+    #db 설치
+    cd ${INSTALL_PATH}/${MW_DB_VERSION}/scripts 
+    ./mysql_install_db --user=mariadb --basedir=${INSTALL_PATH}/${MW_DB_VERSION} --datadir=/data/mariadb/master --defaults-file=/etc/my.cnf > /dev/null 2>&1
+    
+    #TODO: 서비스 systemctl start mysql로 됨
+    systemctl start mariadb
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Uninstall()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    #각 모듈설치(configure했던)경로에서 make clean
 
     Write_Log $FUNCNAME $LINENO "end"
 }

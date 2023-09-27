@@ -51,14 +51,16 @@ GOPT_SKIP_DIALOG_DEFAULT_OK=${OPT_NONE} #0: yes 선택, 1: no 선택, ${OPT_NONE
 #* 설치메인 메뉴 선택
 MENU_OPT_MAIN_INSTALL=${OPT_NONE} # 1:Install Middleware, 2:Show Version, 3:UnInstall.. ${OPT_NONE} : DIALOG
 MENU_OPT_MW_TYPE=${OPT_NONE} # 1:WEB, 2:WAS, 3:DB, ${OPT_NONE} : DIALOG
+MENU_OPT_WEB_TYPE=${OPT_NONE} # 1:Apache, ${OPT_NONE} : DIALOG
+MENU_OPT_WAS_TYPE=${OPT_NONE} # 1:Tomcat, ${OPT_NONE} : DIALOG
 MENU_OPT_DB_TYPE=${OPT_NONE} # 1:MariaDB, 2:MySQL, 3:PostgreSQL, ${OPT_NONE} : DIALOG
 
-# 미들웨어 버전
+# 미들웨어 버전 (TYPE 선택 후 버전출력 인자값만 받으면되니까 크게 MW TYPE으로 나눠도 될듯?)
 MW_WEB_VERSION=${OPT_NONE}
 MW_WAS_VERSION=${OPT_NONE}
 MW_DB_VERSION=${OPT_NONE}
 
-#모듈 버전 (완전 자동화 할 때 개선필요)
+#모듈 버전 (완전 자동화 할 때 개선필요, yum 설치 시 버전 달라지는 문제)
 JAVA_VERSION=${OPT_NONE}
 
 #* DISK 파티션 자동 선택

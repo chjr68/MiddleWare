@@ -47,7 +47,7 @@ function Show_Menu()
             #타입 별 버전 선택 
             #Proto: package 디렉토리에 tar.gz파일 업로드 후 동작확인
             #TODO: 버전값을 불러와서 파일을 받아온 뒤 해당 버전 설치
-            Select_Mw_Version
+            Select_Middleware_Version
 
             #설치 경로 다이얼로그, 경로를 선택하고, INSTALL_PATH를 다시 업데이트 한다.
             Input_Middleware_Install_Path
@@ -97,6 +97,8 @@ function Show_Menu()
 
 function Show_Middleware_Type_Menu
 {
+    Write_Log $FUNCNAME $LINENO "start"
+
     dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Select Middleware Type" 10 50 0 \
     1 WEB \
     2 WAS \
@@ -107,9 +109,11 @@ function Show_Middleware_Type_Menu
     case $item in
     1)
         MENU_OPT_MW_TYPE="1"
+        Show_Web_Type_Menu
         ;;
     2)
         MENU_OPT_MW_TYPE="2"
+        Show_Was_Type_Menu
         ;;
     3)
         MENU_OPT_MW_TYPE="3"
@@ -117,10 +121,80 @@ function Show_Middleware_Type_Menu
         ;;
     *)
         Show_Menu
-    esac
+    esac    
+    
+    Write_Log $FUNCNAME $LINENO "end"
 }
 
-function Select_Mw_Version()
+function Show_Web_Type_Menu
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Select Middleware Type" 10 50 0 \
+    1 Apache \
+    2> $OUTFILE
+
+    item=$(<${OUTFILE})
+    case $item in
+    1)
+        MENU_OPT_WEB_TYPE="1"
+        ;;
+    *)
+        Show_Menu
+    esac    
+    
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Show_Was_Type_Menu
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Select Middleware Type" 10 50 0 \
+    1 Tomcat \
+    2> $OUTFILE
+
+    item=$(<${OUTFILE})
+    case $item in
+    1)
+        MENU_OPT_WAS_TYPE="1"
+        ;;
+    *)
+        Show_Menu
+    esac    
+    
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Show_Db_Type_Menu
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Select DB Type" 10 50 0 \
+    1 MariaDB \
+    2 MySQL \
+    3 PostgreSQL \
+    2> $OUTFILE
+
+    item=$(<${OUTFILE})
+    case $item in
+    1)
+        MENU_OPT_DB_TYPE="1"
+        ;;
+    2)
+        MENU_OPT_DB_TYPE="2"
+        ;;
+    3)
+        MENU_OPT_DB_TYPE="3"
+        ;;
+    *)
+        Show_Menu
+    esac
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Select_Middleware_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
@@ -128,23 +202,33 @@ function Select_Mw_Version()
     
     case $MENU_OPT_MW_TYPE in
         1) 
+            Select_Web_Version
+            ;;
+        2) 
+            Select_Was_Version 
+            ;;
+        3) 
+            Select_Db_Version
+            ;;   
+    esac
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Select_Web_Version()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    local number=1
+    
+    case $MENU_OPT_WEB_TYPE in
+        1) 
             #WEB apache 파일 포맷: httpd-숫자.숫자.숫자
             #정규표현식: '[0-9]{1,3}\-[0-9]{1,3}\-[0-9]{1,3}'
             #mw_pwd: 파일위치 절대경로 확인 필요
             #
             local mw_pwd=`find $g_path/package/1.WEB/ -maxdepth 1 | grep tar.gz | grep -Eo 'httpd-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
             ;;
-        2) 
-            #WAS tomcat 파일 포맷: apache-tomcat-숫자.숫자.숫자
-            local mw_pwd=`find $g_path/package/2.WAS/ -maxdepth 1 | grep tar.gz | grep -Eo 'apache-tomcat-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
-
-            ;;
-        3) 
-            #DB db 파일 포맷: mariadb-숫자.숫자.숫자
-
-            #TODO: DB 버전선택함수 불러오면 아래의 dialog와 겹치는 문제 발생. 처리 필요
-            local mw_pwd=`find $g_path/package/3.DB/ -maxdepth 1 | grep tar.gz | grep -Eo 'mariadb-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
-            ;;   
     esac
 
     \cp -f /dev/null $TMPFILE
@@ -158,7 +242,7 @@ function Select_Mw_Version()
             ((number++))
         done
         
-        dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Please Select The Middleware Version" 10 50 0 `cat $TMPFILE` 2>$OUTFILE
+        dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Please Select The WEB Version" 10 50 0 `cat $TMPFILE` 2>$OUTFILE
 
         case $? in
             1)
@@ -173,27 +257,107 @@ function Select_Mw_Version()
         #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나? 
         item=$(<${OUTFILE})
 
-        
-    #설치메뉴에 따라 버전명만 변수에 초기화
-    case $MENU_OPT_MW_TYPE in
-        1) 
-            MW_WEB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
-            ;;
-        2) 
-            MW_WAS_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
-            ;;
-        3) 
-            MW_DB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
-            ;;   
-    esac
-        # dst="${items[$item]}"
-
-        # #디렉토리 수동 선택
-        # [ ${MENU_UTIL_SELECT_RESTORE_DIR} -eq ${OPT_NONE} ] && dst="${items[$item]}" || dst="${AUTO_OPT_TMS_RESTORE_DIR}"
+        MW_WEB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
     fi
 
-    #dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --fselect package/  10 50 0 
+    Write_Log $FUNCNAME $LINENO "end"
+}
 
+function Select_Was_Version()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    local number=1
+    
+    case $MENU_OPT_WAS_TYPE in
+        1) 
+            #WAS tomcat 파일 포맷: apache-tomcat-숫자.숫자.숫자
+            local mw_pwd=`find $g_path/package/2.WAS/ -maxdepth 1 | grep tar.gz | grep -Eo 'apache-tomcat-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+            ;;
+    esac
+
+    \cp -f /dev/null $TMPFILE
+
+    if [ `echo $mw_pwd | wc -w` -gt 0 ]
+    then
+        for list in $mw_pwd
+        do
+            echo "$number $list"  >> $TMPFILE
+            items[$number]=$list
+            ((number++))
+        done
+        
+        dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Please Select The WAS Version" 10 50 0 `cat $TMPFILE` 2>$OUTFILE
+
+        case $? in
+            1)
+                exit 1
+                ;;
+            255)
+                exit 1
+                ;;
+        esac
+
+        #TODO: item에 선택한 번호의 버전을 가져오고 싶음 (완료)
+        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나? 
+        item=$(<${OUTFILE})
+
+        MW_WAS_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
+    fi
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Select_Db_Version()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    local number=1
+    
+    case $MENU_OPT_DB_TYPE in
+        1) 
+            #mw_pwd: 파일위치 절대경로 확인 필요
+            #DB db 파일 포맷: mariadb-숫자.숫자.숫자
+            #DB type 별 파일 포맷 확인 및 조치 필요
+            local mw_pwd=`find $g_path/package/3.DB/MariaDB -maxdepth 1 | grep tar.gz | grep -Eo 'mariadb-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`            ;;
+        2) 
+            #MySQL 파일 포맷:
+            #local db_pwd=`find $g_path/package/3.DB/MySQL -maxdepth 1 | grep tar.gz | grep -Eo 'apache-tomcat-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+            ;;
+        3) 
+            #PostgreSQL 파일 포맷:
+            #local db_pwd=`find $g_path/package/3.DB/MySQL -maxdepth 1 | grep tar.gz | grep -Eo 'apache-tomcat-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+            ;;   
+    esac
+
+    \cp -f /dev/null $TMPFILE
+
+    if [ `echo $mw_pwd | wc -w` -gt 0 ]
+    then
+        for list in $mw_pwd
+        do
+            echo "$number $list"  >> $TMPFILE
+            items[$number]=$list
+            ((number++))
+        done
+        
+        dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Please Select The DB Version" 10 50 0 `cat $TMPFILE` 2>$OUTFILE
+
+        case $? in
+            1)
+                exit 1
+                ;;
+            255)
+                exit 1
+                ;;
+        esac
+
+        #TODO: item에 선택한 번호의 버전을 가져오고 싶음 (완료)
+        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나? 
+        item=$(<${OUTFILE})
+
+        MW_DB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
+    fi
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -250,102 +414,9 @@ function Input_Middleware_Install_Path()
 #
 # }
 
-function Show_Db_Type_Menu
-{
-    dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Select DB Type" 10 50 0 \
-    1 MariaDB \
-    2 MySQL \
-    3 PostgreSQL \
-    2> $OUTFILE
-
-    item=$(<${OUTFILE})
-    case $item in
-    1)
-        MENU_OPT_DB_TYPE="1"
-        ;;
-    2)
-        MENU_OPT_DB_TYPE="2"
-        ;;
-    3)
-        MENU_OPT_DB_TYPE="3"
-        ;;
-    *)
-        Show_Menu
-    esac
-}
-
-function Select_Db_Version()
-{
-    Write_Log $FUNCNAME $LINENO "start"
-
-    local number=1
-    
-    case $MENU_OPT_DB_TYPE in
-        1) 
-            #mw_pwd: 파일위치 절대경로 확인 필요
-            #DB db 파일 포맷: mariadb-숫자.숫자.숫자
-            #DB type 별 파일 포맷 확인 및 조치 필요
-            local db_pwd=`find $g_path/package/3.DB/MariaDB -maxdepth 1 | grep tar.gz | grep -Eo 'mariadb-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`            ;;
-        2) 
-            #MySQL 파일 포맷:
-            #local db_pwd=`find $g_path/package/3.DB/MySQL -maxdepth 1 | grep tar.gz | grep -Eo 'apache-tomcat-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
-            ;;
-        3) 
-            #PostgreSQL 파일 포맷:
-            #local db_pwd=`find $g_path/package/3.DB/MySQL -maxdepth 1 | grep tar.gz | grep -Eo 'apache-tomcat-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
-            ;;   
-    esac
-
-    \cp -f /dev/null $TMPFILE
-
-    if [ `echo $db_pwd | wc -w` -gt 0 ]
-    then
-        for list in $mw_pwd
-        do
-            echo "$number $list"  >> $TMPFILE
-            items[$number]=$list
-            ((number++))
-        done
-        
-        dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Please Select The DB Version" 10 50 0 `cat $TMPFILE` 2>$OUTFILE
-
-        case $? in
-            1)
-                exit 1
-                ;;
-            255)
-                exit 1
-                ;;
-        esac
-
-        #TODO: item에 선택한 번호의 버전을 가져오고 싶음 (완료)
-        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나? 
-        item=$(<${OUTFILE})
-
-        
-    #설치메뉴에 따라 버전명만 변수에 초기화
-    case $MENU_OPT_DB_TYPE in
-        1) 
-            MW_DB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
-            ;;
-        2) 
-            MW_DB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
-            ;;
-        3) 
-            MW_DB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
-            ;;   
-    esac
-        # dst="${items[$item]}"
-
-        # #디렉토리 수동 선택
-        # [ ${MENU_UTIL_SELECT_RESTORE_DIR} -eq ${OPT_NONE} ] && dst="${items[$item]}" || dst="${AUTO_OPT_TMS_RESTORE_DIR}"
-    fi
-
-    #dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --fselect package/  10 50 0 
 
 
-    Write_Log $FUNCNAME $LINENO "end"
-}
+
 
 
 
