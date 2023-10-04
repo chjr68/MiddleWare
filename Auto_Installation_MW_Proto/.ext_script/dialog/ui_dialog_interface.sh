@@ -322,11 +322,11 @@ function Select_Db_Version()
             local mw_pwd=`find $g_path/package/3.DB/MariaDB -maxdepth 1 | grep tar.gz | grep -Eo 'mariadb-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`            ;;
         2) 
             #MySQL 파일 포맷:
-            #local db_pwd=`find $g_path/package/3.DB/MySQL -maxdepth 1 | grep tar.gz | grep -Eo 'apache-tomcat-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+            local mw_pwd=`find $g_path/package/3.DB/MySQL -maxdepth 1 | grep tar.gz | grep -Eo 'mysql-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
             ;;
         3) 
             #PostgreSQL 파일 포맷:
-            #local db_pwd=`find $g_path/package/3.DB/MySQL -maxdepth 1 | grep tar.gz | grep -Eo 'apache-tomcat-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+            #local mw_pwd=`find $g_path/package/3.DB/MySQL -maxdepth 1 | grep tar.gz | grep -Eo 'apache-tomcat-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
             ;;   
     esac
 

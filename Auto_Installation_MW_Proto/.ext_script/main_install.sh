@@ -27,6 +27,7 @@ function Install_Middleware()
 
     case $MENU_OPT_MW_TYPE in
         1)
+            #디렉토리 생성 전, 파일 유무/생성 여부 확인 후 만들어야 됨
             Make_Dir
 
             Install_Web
@@ -344,34 +345,41 @@ function Install_Mariadb()
     mv ${INSTALL_PATH}/${MW_DB_VERSION}-linux-systemd-x86_64 ${INSTALL_PATH}/${MW_DB_VERSION}
     
     #사용자 생성
-    if [ `cat /etc/group | grep mariadb | wc -l` -eq 0 ]
+    if [ `cat /etc/group | grep maria | wc -l` -eq 0 ]
     then
-        groupadd mariadb
-        useradd -g mariadb mariadb
+        groupadd maria
+        useradd -g maria maria
     fi
+
+    #메인 디렉토리 권한변경
+    chown -R maria.maria ${INSTALL_PATH}/${MW_DB_VERSION}
 
     #디렉토리 생성 및 권한 변경
     mkdir -p /data/mariadb/master
     mkdir -p /data/mariadb/ibdata
     mkdir -p /data/mariadb/iblog
     mkdir -p /data/mariadb/log-bin
-    chown -R mariadb.mariadb /data/mariadb          
+    chown -R maria.maria /data/mariadb          
     
     touch /var/log/mariadb.log
     chmod 644 /var/log/mariadb.log
-    chown mariadb:mariadb /var/log/mariadb.log
+    chown maria:maria /var/log/mariadb.log
 
-    cp $INSTALL_PATH/$MW_DB_VERSION/support-files/mysql.server /etc/init.d/mariadb.service
+    \cp -f $INSTALL_PATH/$MW_DB_VERSION/support-files/mysql.server /etc/init.d/mariadb.service
+    sed -i '/^basedir=$/s@=@='$INSTALL_PATH/$MW_DB_VERSION'@' /etc/init.d/mariadb.service
+    sed -i '/^datadir=$/s@=@=/data/mariadb/master@' /etc/init.d/mariadb.service
 
     #TODO: sed명령어 쓸때 변수못집어넣나? ex) $INSTALL_PATH (큰따옴표 쓰면 됨)
-    #sed로 파일 내용 안바뀜. 확인필요
+    # vi /etc/systemd/system/mariadb.service
+    # sed -i '/^basedir=$/s/=/=\'$INSTALL'/' mariadb.service 변수 사용할 땐, ''(작은 따옴표) 한번 더 묶어주면 됨
     
-    sed -n -e "/^basedir=$/s/basedir=/basedir=$INSTALL_PATH\/$MW_DB_VERSION/g" /etc/init.d/mariadb.service
-    sed -n -e "/^datadir=$/s/datadir=/datadir=\/data\/mariadb\/master/g" /etc/init.d/mariadb.service
+    \cp -f $INSTALL_PATH/$MW_DB_VERSION/support-files/systemd/mariadb.service /etc/systemd/system/mariadb.service
+    sed -i '/^User=/s@mysql@maria@' /etc/systemd/system/mariadb.service
+    sed -i '/^Group=/s@mysql@maria@' /etc/systemd/system/mariadb.service
 
     if [ `cat /etc/profile | grep "export PATH=" | wc -l` -eq 0 ]
     then
-        echo -e "\nexport PATH=${PATH}:/usr/local/src/mariadb/bin" >> /etc/profile
+        echo -e "\nexport PATH=${PATH}:${INSTALL_PATH}/${MW_DB_VERSION}/bin" >> /etc/profile
         source /etc/profile
     fi
 
@@ -421,10 +429,85 @@ log-bin                         = /data/mariadb/log-bin/mysql-bin" > /etc/my.cnf
 
     #db 설치
     cd ${INSTALL_PATH}/${MW_DB_VERSION}/scripts 
-    ./mysql_install_db --user=mariadb --basedir=${INSTALL_PATH}/${MW_DB_VERSION} --datadir=/data/mariadb/master --defaults-file=/etc/my.cnf > /dev/null 2>&1
+    ./mysql_install_db --user=maria --basedir="${INSTALL_PATH}/${MW_DB_VERSION}" --datadir=/data/mariadb/master --defaults-file=/etc/my.cnf > /dev/null 2>&1
     
-    #TODO: 서비스 systemctl start mysql로 됨
+    #심볼릭링크 (mariadb 실행파일에 /usr/local/mysql 경로가 하드코딩되어있어서 추가 필요)
+    ln -s ${INSTALL_PATH}/${MW_DB_VERSION} /usr/local/mysql
+
+
+    #TODO: 서비스 systemctl start mysql로 됨 (서비스명 변경 완료)
     systemctl start mariadb
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Install_Mysql()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    #TODO: Progressbar 하드코딩 말고 로직 변경
+    local jump=50
+
+    MSG="MySQL Install ( $MW_DB_VERSION )"
+    Progress=$(($Progress+$jump))
+    echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
+    tar zxf ${g_path}/package/3.DB/MySQL/${MW_DB_VERSION}-el7-x86_64.tar.gz -C ${INSTALL_PATH}
+
+    mv ${INSTALL_PATH}/${MW_DB_VERSION}-el7-x86_64 ${INSTALL_PATH}/${MW_DB_VERSION}
+    
+    #사용자 생성
+    if [ `cat /etc/group | grep maria | wc -l` -eq 0 ]
+    then
+        groupadd mysql
+        useradd -g mysql
+    fi
+
+    #메인 디렉토리 권한변경
+    chown -R mysql.mysql ${INSTALL_PATH}/${MW_DB_VERSION}
+
+    #디렉토리 생성 및 권한 변경
+    mkdir -p /data/mysql
+
+    chown -R mysql:mysql /data/mysql    
+    
+    #환경변수 추가
+    if [ `cat ~/.bash_profile | grep "PATH=" | grep $INSTALL_PATH/$MW_DB_VERSION | wc -l` -eq 0 ]
+    then
+        sed -i '/^PATH=/s@$@'$INSTALL_PATH/$MW_DB_VERSION'@' ~/.bash_profile
+        source ~/.bash_profile
+    fi
+    
+
+    echo -e "[mysqld]
+#datadir=/var/lib/mysql
+#socket=/var/lib/mysql/mysql.sock
+datadir=/data/mysql
+socket=/data/mysql/mysql.sock
+
+[mysqld_safe]
+#log-error=/var/log/mariadb/mariadb.log
+#pid-file=/var/run/mariadb/mariadb.pid
+
+log-error=/var/log/mysql/mysql.log
+pid-file=/var/run/mysql/mysql.pid
+" > /etc/my.cnf
+
+    #db 설치
+    cd ${INSTALL_PATH}/${MW_DB_VERSION}/bin
+    ./mysql_ssl_rsa_setup > /dev/null 2>&1
+    
+    ./mysqld --defaults-file=/etc/my.cnf --initialize --user=mysql
+
+    #심볼릭링크 (mariadb 실행파일에 /usr/local/mysql 경로가 하드코딩되어있어서 추가 필요)
+    ln -s /data/mysql/mysql.sock /tmp/mysql.sock
+
+    #서비스등록 및 시작
+    cd ${INSTALL_PATH}/${MW_DB_VERSION}/support-files
+    cp mysql.server /etc/init.d/mysql.service
+    chkconfig --add mysql.service
+
+    systemctl start mysql.service
+    systemctl status mysql.service
 
     Write_Log $FUNCNAME $LINENO "end"
 }
