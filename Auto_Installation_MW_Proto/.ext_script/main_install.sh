@@ -456,27 +456,39 @@ function Install_Mysql()
     mv ${INSTALL_PATH}/${MW_DB_VERSION}-el7-x86_64 ${INSTALL_PATH}/${MW_DB_VERSION}
     
     #사용자 생성
-    if [ `cat /etc/group | grep maria | wc -l` -eq 0 ]
+    if [ `cat /etc/group | grep mysql | wc -l` -eq 0 ]
     then
         groupadd mysql
-        useradd -g mysql
+        useradd -M -s /sbin/nologin -g mysql mysql
     fi
 
-    #메인 디렉토리 권한변경
+
+
+    #메인 디렉토리 생성 및 권한변경
+    mkdir -p ${INSTALL_PATH}/${MW_DB_VERSION}/log
+    touch ${INSTALL_PATH}/${MW_DB_VERSION}/log/mysql.log
+
     chown -R mysql.mysql ${INSTALL_PATH}/${MW_DB_VERSION}
 
     #디렉토리 생성 및 권한 변경
     mkdir -p /data/mysql
+    touch /data/mysql/.passwd
 
     chown -R mysql:mysql /data/mysql    
     
-    #환경변수 추가
-    if [ `cat ~/.bash_profile | grep "PATH=" | grep $INSTALL_PATH/$MW_DB_VERSION | wc -l` -eq 0 ]
-    then
-        sed -i '/^PATH=/s@$@'$INSTALL_PATH/$MW_DB_VERSION'@' ~/.bash_profile
-        source ~/.bash_profile
-    fi
+    # #환경변수 추가
+    # if [ `cat ~/.bash_profile | grep "PATH=" | grep $INSTALL_PATH/$MW_DB_VERSION | wc -l` -eq 0 ]
+    # then
+    #     sed -i '/^PATH=/s@$@'$INSTALL_PATH/$MW_DB_VERSION'@' ~/.bash_profile
+    #     source ~/.bash_profile
+    # fi
     
+    if [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/${MW_DB_VERSION}/bin | wc -l` -eq 0 ]
+    then
+        echo -e "\nexport DB_HOME=${INSTALL_PATH}/${MW_DB_VERSION}
+export PATH="$PATH:${INSTALL_PATH}/${MW_DB_VERSION}/bin"" >> /etc/profile
+        source /etc/profile
+    fi
 
     echo -e "[mysqld]
 #datadir=/var/lib/mysql
@@ -488,26 +500,26 @@ socket=/data/mysql/mysql.sock
 #log-error=/var/log/mariadb/mariadb.log
 #pid-file=/var/run/mariadb/mariadb.pid
 
-log-error=/var/log/mysql/mysql.log
-pid-file=/var/run/mysql/mysql.pid
+log-error=$INSTALL_PATH/$MW_DB_VERSION/log/mysql.log
+pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
 " > /etc/my.cnf
 
     #db 설치
     cd ${INSTALL_PATH}/${MW_DB_VERSION}/bin
-    ./mysql_ssl_rsa_setup > /dev/null 2>&1
-    
-    ./mysqld --defaults-file=/etc/my.cnf --initialize --user=mysql
+    ./mysqld --initialize --user=mysql > /data/mysql/.passwd 2>&1
+    ./mysql_ssl_rsa_setup --defaults-file=/etc/my.cnf > /dev/null 2>&1
+    #./mysqld_safe --user=mysql 이거 치면 왜 쉘 멈추냐?
 
     #심볼릭링크 (mariadb 실행파일에 /usr/local/mysql 경로가 하드코딩되어있어서 추가 필요)
     ln -s /data/mysql/mysql.sock /tmp/mysql.sock
 
     #서비스등록 및 시작
-    cd ${INSTALL_PATH}/${MW_DB_VERSION}/support-files
-    cp mysql.server /etc/init.d/mysql.service
-    chkconfig --add mysql.service
+    \cp -f $INSTALL_PATH/$MW_DB_VERSION/support-files/mysql.server /etc/init.d/mysql.service
+    sed -i '/^basedir=$/s@=@='$INSTALL_PATH/$MW_DB_VERSION'@' /etc/init.d/mysql.service
+    sed -i '/^datadir=$/s@=@=/data/mysql@' /etc/init.d/mysql.service
 
+    chkconfig --add mysql.service
     systemctl start mysql.service
-    systemctl status mysql.service
 
     Write_Log $FUNCNAME $LINENO "end"
 }
