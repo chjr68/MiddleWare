@@ -19,13 +19,13 @@ g_path=$( cd "$(dirname "$0")" ; pwd )
 LOGFILE='/tmp/.install.log'
 TMPFILE='/tmp/.install.tmp'
 OUTFILE='/tmp/.install.out'
+VERSION='/tmp/.version.out'
 
 INSTALL_PATH=/usr/local/src
 
 ############################################### 옵션 기본값
 
 OPT_NONE=-9999 #초기값
-DIALOG_YESNO_DEFAULT_OK=${OPT_NONE} #0: yes 1: no, ${OPT_NONE}
 
 #설치, 부분설치 옵션
 OPT_ENABLE_INSTALL=1 #설치 활성
@@ -63,25 +63,7 @@ MW_DB_VERSION=${OPT_NONE}
 #모듈 버전 (완전 자동화 할 때 개선필요, yum 설치 시 버전 달라지는 문제)
 JAVA_VERSION=${OPT_NONE}
 
-#* DISK 파티션 자동 선택
-MENU_OPT_SELECT_DISK_PARTITION=${OPT_NONE} #1: 자동 선택, ${OPT_NONE} : DIALOG
-AUTO_OPT_DISK_PARTITION="-" #$(fdisk -l 2>&1 |grep Disk|grep sd[a-z] |cut -d ' ' -f2|cut -d ':' -f1 | head -n1) #선택된 디스크 파티션
-
-####* INSTALL_PATH (설치 경로) 선택
-#* FactoryInstall Path 선택
-MENU_OPT_ENTER_FACTORY_INSTALL_PATH=${OPT_NONE} #1: 자동선택, ${OPT_NONE} : DIALOG
-AUTO_OPT_FACTORY_INSTALL_PATH=${INSTALL_PATH} #설치 경로
-
-################################################ DIALOG + Confirm (yes/no)
-
-#* yesno Dialog 기본 옵션, 기본 설정 옵션 일괄 적용
-DIALOG_YESNO_DEFAULT_OK=${OPT_NONE} #0: yes 1: no, ${OPT_NONE}
-
-#* 파티션 생성 옵션
-DIALOG_YESNO_CREATE_DISK_PARTITION=${OPT_NONE} #1: 디스크에 /home1, /data파티션 생성, 2: / 파티션에 home1,data 디렉토리 생성, ${OPT_NONE} : 다이얼로그 (1번 생성되면 무시)
-
-
-
-
-
-
+#APR / PCRE 버전
+APR_VERSION=${OPT_NONE}
+APR_UTIL_VERSION=${OPT_NONE}
+PCRE_VERSION=${OPT_NONE}

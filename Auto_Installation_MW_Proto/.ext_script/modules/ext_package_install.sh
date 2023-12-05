@@ -35,8 +35,7 @@ function Delete_Rpms_Directory()
     rm -rf ${g_path}/rpms
 
     #WEB module 압축 해제 디렉토리 삭제
-    ls -l ${g_path}/package/1.WEB/module | grep ^d | awk '{print $NF}' | xargs rm -rf
-
+    ls -l ${g_path}/package/module | grep ^d | awk '{print $NF}' | xargs rm -rf
 
     Write_Log $FUNCNAME $LINENO "end"
 }

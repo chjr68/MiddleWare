@@ -23,7 +23,7 @@ function Install_Middleware()
     Write_Log $FUNCNAME $LINENO "start"
 
     #이미 설치가 되어 있는지 체크 - Factory Install 시에만 수행한다.
-    ChkAlreadyInstalled
+    Chk_Dir_Exist
 
     case $MENU_OPT_MW_TYPE in
         1)
@@ -52,7 +52,7 @@ function Install_Middleware()
     Write_Log $FUNCNAME $LINENO "end"
 }
 
-function ChkAlreadyInstalled()
+function Chk_Dir_Exist()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
@@ -63,7 +63,6 @@ function ChkAlreadyInstalled()
         dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --yesno "$MSG" 7 80
 
         answer=$?
-        #[ ${DIALOG_YESNO_DEFAULT_OK} -eq ${OPT_NONE} ] && answer=$G_DIALOG_RESULT || answer=${DIALOG_YESNO_DEFAULT_OK}
 
         case $answer in
             0)
@@ -86,7 +85,6 @@ function Make_Dir()
     mkdir -p ${INSTALL_PATH} # 제일 먼저 만들어야 함
 
     Write_Log $FUNCNAME $LINENO "end"
-
 }
 
 #TODO: 파일 버전 선택해서 설치 (완료)
@@ -100,12 +98,14 @@ function Make_Dir()
 
 #TODO: Progress bar 모듈마다 작동하도록 (모듈1설치 1~100% -> 모듈2설치 1~100% ...)
 #      config 및 환경변수 설정해주는 코드 작성
+
 function Install_Web()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
     case $MENU_OPT_WEB_TYPE in
         1) 
+            #TODO: 현재 2.4.X 버전만 호환 됨. apr, apr-util 사용자 커스텀생성으로 바꿔야 될듯
             #module install
             Install_Apache_Apr
             Install_Apache_Apr_Util
@@ -128,15 +128,18 @@ function Install_Apache_Apr()
     Write_Log $FUNCNAME $LINENO "start"
     local jump=0
 
-    MSG="Apr Install ( apr-1.7.4 )"
+    MSG="Apr Install ( $APR_VERSION )"
     Progress=$(($Progress+$jump))
     echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
-    tar zxf ${g_path}/package/1.WEB/module/apr-1.7.4.tar.gz -C ${g_path}/package/1.WEB/module
+    tar zxf ${g_path}/package/module/${APR_VERSION}.tar.gz -C ${g_path}/package/module
 
-    cd ${g_path}/package/1.WEB/module/apr-1.7.4
+    cd ${g_path}/package/module/${APR_VERSION}
     ./configure --prefix=$INSTALL_PATH/apr > /dev/null 2>&1
     make > /dev/null 2>&1
     make install > /dev/null 2>&1
+
+    #TODO: 모듈버전을 넣어야 됨.
+    echo $APR_VERSION > $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -146,15 +149,17 @@ function Install_Apache_Apr_Util()
     Write_Log $FUNCNAME $LINENO "start"
     local jump=25
 
-    MSG="Apr-Util Install ( apr-util-1.6.3 )"
+    MSG="Apr-Util Install ( $APR_UTIL_VERSION )"
     Progress=$(($Progress+$jump))
     echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
-    tar zxf ${g_path}/package/1.WEB/module/apr-util-1.6.3.tar.gz -C ${g_path}/package/1.WEB/module
+    tar zxf ${g_path}/package/module/${APR_UTIL_VERSION}.tar.gz -C ${g_path}/package/module
 
-    cd ${g_path}/package/1.WEB/module/apr-util-1.6.3
+    cd ${g_path}/package/module/${APR_UTIL_VERSION}
     ./configure --prefix=$INSTALL_PATH/apr-util --with-apr=$INSTALL_PATH/apr > /dev/null 2>&1
     make > /dev/null 2>&1
     make install > /dev/null 2>&1
+
+    echo $APR_UTIL_VERSION > $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -164,15 +169,17 @@ function Install_Apache_Pcre()
     Write_Log $FUNCNAME $LINENO "start"
     local jump=25
 
-    MSG="Pcre Install ( pcre-8.45 )"
+    MSG="Pcre Install ( $PCRE_VERSION )"
     Progress=$(($Progress+$jump))
     echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
-    tar zxf ${g_path}/package/1.WEB/module/pcre-8.45.tar.gz -C ${g_path}/package/1.WEB/module
+    tar zxf ${g_path}/package/module/${PCRE_VERSION}.tar.gz -C ${g_path}/package/module
 
-    cd ${g_path}/package/1.WEB/module/pcre-8.45
+    cd ${g_path}/package/module/${PCRE_VERSION}
     ./configure --prefix=$INSTALL_PATH/pcre > /dev/null 2>&1
     make > /dev/null 2>&1
     make install > /dev/null 2>&1
+
+    echo $PCRE_VERSION > $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -244,7 +251,10 @@ WantedBy=multi-user.target" > /etc/systemd/system/httpd.service
 
     #서비스 시작
     systemctl daemon-reload
+    systemctl enable httpd > /dev/null 2>&1
     systemctl restart httpd
+
+    echo $MW_WEB_VERSION > $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -267,6 +277,7 @@ function Install_Tomcat()
     Write_Log $FUNCNAME $LINENO "start"
 
     MSG="Tomcat Install ( $MW_WAS_VERSION )"
+    local jump=50
     Progress=$(($Progress+$jump))
     echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
     tar zxf ${g_path}/package/2.WAS/${MW_WAS_VERSION}.tar.gz -C ${INSTALL_PATH}
@@ -302,10 +313,18 @@ Restart=always \n
 [Install]
 WantedBy=multi-user.target" > /etc/systemd/system/tomcat.service
 
+    if [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/${MW_WAS_VERSION}/bin | wc -l` -eq 0 ]
+    then
+        echo -e "\nexport PATH=${PATH}:${INSTALL_PATH}/${MW_WAS_VERSION}/bin" >> /etc/profile
+        source /etc/profile
+    fi
+
     systemctl daemon-reload
-    systemctl enable tomcat
+    systemctl enable tomcat > /dev/null 2>&1
     systemctl restart tomcat
     
+    echo $MW_WAS_VERSION > $VERSION
+
     Write_Log $FUNCNAME $LINENO "end"
 }
 
@@ -377,7 +396,7 @@ function Install_Mariadb()
     sed -i '/^User=/s@mysql@maria@' /etc/systemd/system/mariadb.service
     sed -i '/^Group=/s@mysql@maria@' /etc/systemd/system/mariadb.service
 
-    if [ `cat /etc/profile | grep "export PATH=" | wc -l` -eq 0 ]
+    if [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/${MW_DB_VERSION}/bin | wc -l` -eq 0 ]
     then
         echo -e "\nexport PATH=${PATH}:${INSTALL_PATH}/${MW_DB_VERSION}/bin" >> /etc/profile
         source /etc/profile
@@ -437,6 +456,8 @@ log-bin                         = /data/mariadb/log-bin/mysql-bin" > /etc/my.cnf
 
     #TODO: 서비스 systemctl start mysql로 됨 (서비스명 변경 완료)
     systemctl start mariadb
+
+    echo $MW_DB_VERSION > $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -521,14 +542,183 @@ pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
     chkconfig --add mysql.service
     systemctl start mysql.service
 
+    echo $MW_DB_VERSION > $VERSION
+
+    # #mysql root password 변경, /data/mysql/.passwd 파일 읽어서 초기 패스워드 사용해야 됨
+    # mysql -uroot -p'초기패스워드' -e "alter user 'root'@'localhost' identified by 'Sniper13@$';"
+
     Write_Log $FUNCNAME $LINENO "end"
+}
+
+#TODO: Postgresql 설치방법 가이드북 작성 및 코드 작성
+function Install_Postgresql()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+
+
+    Write_Log $FUNCNAME $LINENO "end"   
 }
 
 function Uninstall()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    #각 모듈설치(configure했던)경로에서 make clean
+    Show_Middleware_Type_Menu
+
+    case $MENU_OPT_MW_TYPE in
+        1) 
+            Uninstall_Web
+            ;;
+        2) 
+            Uninstall_Was
+            ;;
+        3) 
+            Uninstall_Db
+            ;;   
+    esac
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Uninstall_Web()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    case $MENU_OPT_WEB_TYPE in
+        1) 
+            Uninstall_Web_Apache
+            ;;
+
+    esac
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Uninstall_Web_Apache()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    if [ `cat /tmp/.version.out | grep "httpd" | wc -l` -eq 0 ]
+    then
+        local MSG="Apache is not installed."
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        Show_Menu
+    else
+        local jump=50
+        MW_WEB_VERSION=`cat /tmp/.version.out | grep "httpd" | cut -f 2 -d' '`
+
+        MSG="Apache Uninstall ( $MW_WEB_VERSION )"
+        Progress=$(($Progress+$jump))
+        echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
+
+        systemctl stop httpd
+
+        #TODO: apr, apr-util, pcre 각각 다 지워줘야 됨
+        cd ${g_path}/package/module/apr-1.7.4
+        make distclean > /dev/null 2>&1
+        
+        cd ${g_path}/package/module/apr-util-1.6.3
+        make distclean > /dev/null 2>&1
+
+        cd ${g_path}/package/module/pcre-8.45
+        make distclean > /dev/null 2>&1
+
+        rm -rf /etc/systemd/system/httpd.service
+        rm -rf /etc/init.d/httpd
+        rm -rf ${g_path}/package/1.WEB/${MW_WEB_VERSION}
+        rm -rf ${INSTALL_PATH}/*
+
+        sed -i '/httpd/d' /tmp/.version.out
+
+        local MSG="Uninstallation finished.\
+        \nTerminate menu"
+
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+    fi
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Uninstall_Was()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    case $MENU_OPT_WAS_TYPE in
+        1) 
+            Uninstall_Was_Tomcat
+            ;;
+
+    esac
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Uninstall_Was_Tomcat()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    if [ `cat /tmp/.version.out | grep "tomcat" | wc -l` -eq 0 ]
+    then
+        local MSG="Tomcat is not installed."
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        Show_Menu
+    else
+        local jump=50
+        MW_WAS_VERSION=`cat /tmp/.version.out | grep "tomcat" | cut -f 2 -d' '`
+        #TODO: JAVA_VERSION 정의해줘야 됨. .version.out 파일 걸 가져오기
+
+        MSG="Tomcat Uninstall ( $MW_WAS_VERSION )"
+        Progress=$(($Progress+$jump))
+        echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
+
+        systemctl stop tomcat
+        rm -rf /etc/systemd/system/tomcat.service
+        rm -rf ${g_path}/package/2.WAS/${MW_WAS_VERSION}
+        rm -rf ${INSTALL_PATH}/*
+
+        #확인필요, tomcat path라인 삭제 구문
+        sed -i "/$MW_WAS_VERSION\/bin/d" /etc/profile
+        sed -i "/$JAVA_VERSION/d" /etc/profile
+
+        sed -i '/tomcat/d' /tmp/.version.out
+
+        local MSG="Uninstallation finished.\
+        \nTerminate menu"
+
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+    fi
+    
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Uninstall_Db()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    case $MENU_OPT_WEB_TYPE in
+        1) 
+            Uninstall_Db_Mariadb
+            ;;
+        2)
+            Uninstall_Db_Mysql
+            ;;
+        3)
+            Uninstall_Db_Postgresql
+            ;;
+
+    esac
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Uninstall_Db_Mariadb()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+
 
     Write_Log $FUNCNAME $LINENO "end"
 }

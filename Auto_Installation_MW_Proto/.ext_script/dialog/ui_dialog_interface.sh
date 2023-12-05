@@ -59,13 +59,10 @@ function Show_Menu()
             ;;
         2) 
             #Version Info
-            PrintVersion
+            Show_Middleware_Version
             ;;
         3)
             #UnInstall
-            CheckAllSystemModule
-
-            ChkServerRunning
             Uninstall
             ;;
         4)
@@ -197,8 +194,6 @@ function Show_Db_Type_Menu
 function Select_Middleware_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
-
-    local number=1
     
     case $MENU_OPT_MW_TYPE in
         1) 
@@ -219,22 +214,38 @@ function Select_Web_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    local number=1
-    
     case $MENU_OPT_WEB_TYPE in
         1) 
-            #WEB apache 파일 포맷: httpd-숫자.숫자.숫자
-            #정규표현식: '[0-9]{1,3}\-[0-9]{1,3}\-[0-9]{1,3}'
-            #mw_pwd: 파일위치 절대경로 확인 필요
-            #
-            local mw_pwd=`find $g_path/package/1.WEB/ -maxdepth 1 | grep tar.gz | grep -Eo 'httpd-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+            Select_Apache_Version
+            Select_Apr_Version
+            Select_AprUtil_Version
+            Select_Pcre_Version
             ;;
     esac
 
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Select_Apache_Version()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    local number=1
+    #WEB apache 파일 포맷: httpd-숫자.숫자.숫자
+    #정규표현식: '[0-9]{1,3}\-[0-9]{1,3}\-[0-9]{1,3}'
+    #mw_pwd: 파일위치 절대경로 확인 필요
+    #
+    local mw_pwd=`find $g_path/package/1.WEB/ -maxdepth 1 | grep tar.gz | grep -Eo 'httpd-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+
     \cp -f /dev/null $TMPFILE
 
-    if [ `echo $mw_pwd | wc -w` -gt 0 ]
+    if [ `echo $mw_pwd | wc -w` -eq 0 ]
     then
+        local MSG="Apache file does not exist."
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        Show_Menu
+    else
         for list in $mw_pwd
         do
             echo "$number $list"  >> $TMPFILE
@@ -258,6 +269,139 @@ function Select_Web_Version()
         item=$(<${OUTFILE})
 
         MW_WEB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
+    fi
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Select_Apr_Version()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    local number=1
+    local module_pwd=`find $g_path/package/module/ -maxdepth 1 | grep tar.gz | grep -Eo 'apr-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+
+    \cp -f /dev/null $TMPFILE
+
+    if [ `echo $module_pwd | wc -w` -eq 0 ]
+    then
+        local MSG="Apr file does not exist."
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        Show_Menu
+    else
+        for list in $module_pwd
+        do
+            echo "$number $list"  >> $TMPFILE
+            items[$number]=$list
+            ((number++))
+        done
+        
+        dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Please Select The Apr Version" 10 50 0 `cat $TMPFILE` 2>$OUTFILE
+
+        case $? in
+            1)
+                exit 1
+                ;;
+            255)
+                exit 1
+                ;;
+        esac
+
+        #TODO: item에 선택한 번호의 버전을 가져오고 싶음 (완료)
+        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나? 
+        item=$(<${OUTFILE})
+
+        APR_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
+    fi
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Select_AprUtil_Version()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    local number=1
+    local module_pwd=`find $g_path/package/module/ -maxdepth 1 | grep tar.gz | grep -Eo 'apr-util-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+
+    \cp -f /dev/null $TMPFILE
+
+    if [ `echo $module_pwd | wc -w` -eq 0 ]
+    then
+        local MSG="Apr-Util file does not exist."
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        Show_Menu
+    else
+        for list in $module_pwd
+        do
+            echo "$number $list"  >> $TMPFILE
+            items[$number]=$list
+            ((number++))
+        done
+        
+        dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Please Select The Apr-Util Version" 10 50 0 `cat $TMPFILE` 2>$OUTFILE
+
+        case $? in
+            1)
+                exit 1
+                ;;
+            255)
+                exit 1
+                ;;
+        esac
+
+        #TODO: item에 선택한 번호의 버전을 가져오고 싶음 (완료)
+        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나? 
+        item=$(<${OUTFILE})
+
+        APR_UTIL_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
+    fi
+
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Select_Pcre_Version()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    local number=1
+    local module_pwd=`find $g_path/package/module/ -maxdepth 1 | grep tar.gz | grep -Eo 'pcre-[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+
+    \cp -f /dev/null $TMPFILE
+
+    if [ `echo $module_pwd | wc -w` -eq 0 ]
+    then
+        local MSG="Pcre file does not exist."
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        Show_Menu
+    else
+        for list in $module_pwd
+        do
+            echo "$number $list"  >> $TMPFILE
+            items[$number]=$list
+            ((number++))
+        done
+        
+        dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Please Select The Pcre Version" 10 50 0 `cat $TMPFILE` 2>$OUTFILE
+
+        case $? in
+            1)
+                exit 1
+                ;;
+            255)
+                exit 1
+                ;;
+        esac
+
+        #TODO: item에 선택한 번호의 버전을 가져오고 싶음 (완료)
+        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나? 
+        item=$(<${OUTFILE})
+
+        PCRE_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
     fi
 
     Write_Log $FUNCNAME $LINENO "end"
@@ -366,18 +510,6 @@ function Input_Middleware_Install_Path()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    #기본 경로는 INSTALL_PATH
-    #TMS_INSTALL_PATH, PATCH 설치일경우 해당 값
-    #Factory Install 이면 /home1/TMS41 기본값, 다만 선택해서 설정 가능
-    #Factory Install 은 처음부터 INSTALL_PATH를 /home1/TMS41 로 제공해준다. (이건 고정 사양)
-    
-    #2023.03.13 #115619 최초 설치시 인스톨이 진행되지 않는 현상. 자동 설치 옵션의 값이 비어서 발생.
-    #자동 설치 옵션이 비었을 경우, 고정 경로 값으로 진행
-    # if [ -z ${TMS_INSTALL_PATH} ]
-    # then
-    #     AUTO_OPT_FACTORY_INSTALL_PATH=${INSTALL_PATH} #설치 경로
-    # fi
-
     local dialog_message="Please Enter Middleware Install Path \n\
     ex) ${INSTALL_PATH}\n"  
 
@@ -389,34 +521,3 @@ function Input_Middleware_Install_Path()
 
     Write_Log $FUNCNAME $LINENO "end"
 }
-
-# function Show_Warning_Install_Path_Not_Exist()
-# {
-#     Write_Log $FUNCNAME $LINENO "start"
-#
-#     if [ -z ${TMS_INSTALL_PATH} ]
-#     then
-#         WRITE_LOG $FUNCNAME $LINENO "Middleware_Install_Path not exist, source ~/.bash_profile command"
-#
-#         local MSG="There is no Middleware Installation path.\
-#                 \nPlease check environment variable Middleware_Install_Path \
-#                 \n(Please run source ~/.bash_profile command)\
-#                 \nExit the Installer."
-#         tms_dialog ${GOPT_SKIP_DIALOG_DEFAULT_OK} --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
-#     
-#         #2023.06.08 패치시 TMS_INSTALL_PATH 가 존재하지 않는 경우. 환경 변수 적용
-#         ApplyEnvProfile
-#
-#         exit 1
-#     fi
-#
-#     Write_Log $FUNCNAME $LINENO "end"
-#
-# }
-
-
-
-
-
-
-
