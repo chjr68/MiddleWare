@@ -53,9 +53,6 @@ function Show_Menu()
             #설치 경로 다이얼로그, 경로를 선택하고, INSTALL_PATH를 다시 업데이트 한다.
             Input_Middleware_Install_Path
 
-            #기본 시스템 체크, 향후 Install 계열과 Tool 계열 분리
-            #CheckAllSystemModule 
-
             Install_Middleware
             ;;
         2) 
@@ -77,8 +74,6 @@ function Show_Menu()
             ;;
     esac
 
-    #한번 설치를 수행했으면, 초기화를 시켜야 두번 돌지 않음.
-    #각 옵션은, 자체적으로 독립적으로 수행이 가능해야 함.
     MENU_OPT_MAIN_INSTALL=${OPT_NONE}
 
     Write_Log $FUNCNAME $LINENO "end"

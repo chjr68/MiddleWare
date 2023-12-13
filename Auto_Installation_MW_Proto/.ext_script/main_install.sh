@@ -815,13 +815,14 @@ function Uninstall_Db_Postgresql()
         Progress=$(($Progress+$jump))
         echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
 
-        if [ `ps -ef | grep "postgres:" | wc -l` -gt 1 ]
+        if [ `ps -ef | grep "postgresql" | wc -l` -gt 1 ]
         then
-            kill `cat /data/postgresql/postmaster.pid | head -1` > /dev/null 2>&1 | echo -ne '\n'
+            kill `cat /data/postgresql/postmaster.pid | head -1` | echo -ne '\n' > /dev/null 2>&1
         fi
 
         cd ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}
         make distclean > /dev/null 2>&1
+        cd ${g_path}
 
         rm -rf ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}
         rm -rf ${INSTALL_PATH}
