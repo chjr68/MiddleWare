@@ -457,7 +457,7 @@ log-bin                         = /data/mariadb/log-bin/mysql-bin" > /etc/my.cnf
     #TODO: 서비스 systemctl start mysql로 됨 (서비스명 변경 완료)
     systemctl start mariadb
 
-    echo $MW_DB_VERSION >> $VERSION
+    echo $MW_DB_VERSION $INSTALL_PATH >> $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -542,7 +542,7 @@ pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
     chkconfig --add mysql.service
     systemctl start mysql.service
 
-    echo $MW_DB_VERSION >> $VERSION
+    echo $MW_DB_VERSION $INSTALL_PATH >> $VERSION
 
     # #mysql root password 변경, /data/mysql/.passwd 파일 읽어서 초기 패스워드 사용해야 됨
     # mysql -uroot -p'초기패스워드' -e "alter user 'root'@'localhost' identified by 'Sniper13@$';"
@@ -592,7 +592,7 @@ function Install_Postgresql()
     cd ${INSTALL_PATH}/$MW_DB_VERSION/bin/
     su - postgres -c "postgres -D /data/postgresql/ &" > /dev/null 2>&1 | echo -ne '\n'
 
-    echo $MW_DB_VERSION >> $VERSION
+    echo $MW_DB_VERSION $INSTALL_PATH >> $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -655,7 +655,10 @@ function Uninstall_Web_Apache()
         Progress=$(($Progress+$jump))
         echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
 
-        systemctl stop httpd
+        if [ `ps -ef | grep httpd | wc -l` -gt 1 ]
+        then
+            systemctl stop httpd
+        fi
 
         #TODO: apr, apr-util, pcre 각각 다 지워줘야 됨
         cd ${g_path}/package/module/${APR_VERSION}
@@ -722,8 +725,12 @@ function Uninstall_Was_Tomcat()
         MSG="Tomcat Uninstall ( $MW_WAS_VERSION )"
         Progress=$(($Progress+$jump))
         echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
-
-        systemctl stop tomcat
+        
+        if [ `ps -ef | grep tomcat | wc -l` -gt 1 ]
+        then
+            systemctl stop tomcat
+        fi
+        
         rm -rf /etc/systemd/system/tomcat.service
         rm -rf ${g_path}/package/2.WAS/${MW_WAS_VERSION}
         rm -rf ${INSTALL_PATH}
@@ -801,7 +808,10 @@ function Uninstall_Db_Postgresql()
         Progress=$(($Progress+$jump))
         echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
 
-        kill `cat /data/postgresql/postmaster.pid | head -1` > /dev/null 2>&1 | echo -ne '\n'
+        if [ `ps -ef | grep "postgres:" | wc -l` -gt 1 ]
+        then
+            kill `cat /data/postgresql/postmaster.pid | head -1` > /dev/null 2>&1 | echo -ne '\n'
+        fi
 
         cd ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}
         make distclean > /dev/null 2>&1
