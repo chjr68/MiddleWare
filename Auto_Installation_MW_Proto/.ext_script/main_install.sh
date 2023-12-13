@@ -74,6 +74,8 @@ function Chk_Dir_Exist()
         esac
     fi
 
+    source /etc/profile
+
     Write_Log $FUNCNAME $LINENO "end"
 }
 
@@ -287,7 +289,7 @@ function Install_Tomcat()
     #TODO: java 버전바뀌는거 체크해야 됨, 이미 환경변수 있을경우 패스하는 로직, 자바경로 자동으로 찾아서 넣어주는 로직
     if [ `cat /etc/profile | grep "export JAVA_HOME=" | wc -l` -eq 0 ]
     then
-        echo -e "\nexport JAVA_HOME=/usr/lib/jvm/$JAVA_VERSION" >> /etc/profile
+        echo -e "export JAVA_HOME=/usr/lib/jvm/$JAVA_VERSION" >> /etc/profile
         source /etc/profile
     fi
 
@@ -315,7 +317,7 @@ WantedBy=multi-user.target" > /etc/systemd/system/tomcat.service
 
     if [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/${MW_WAS_VERSION}/bin | wc -l` -eq 0 ]
     then
-        echo -e "\nexport PATH=${PATH}:${INSTALL_PATH}/${MW_WAS_VERSION}/bin" >> /etc/profile
+        echo -e "export PATH=${PATH}:${INSTALL_PATH}/${MW_WAS_VERSION}/bin" >> /etc/profile
         source /etc/profile
     fi
 
@@ -323,7 +325,8 @@ WantedBy=multi-user.target" > /etc/systemd/system/tomcat.service
     systemctl enable tomcat > /dev/null 2>&1
     systemctl restart tomcat
     
-    echo $MW_WAS_VERSION >> $VERSION
+    echo $JAVA_VERSION >> $VERSION
+    echo $MW_WAS_VERSION $INSTALL_PATH >> $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -398,7 +401,7 @@ function Install_Mariadb()
 
     if [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/${MW_DB_VERSION}/bin | wc -l` -eq 0 ]
     then
-        echo -e "\nexport PATH=${PATH}:${INSTALL_PATH}/${MW_DB_VERSION}/bin" >> /etc/profile
+        echo -e "export PATH=${PATH}:${INSTALL_PATH}/${MW_DB_VERSION}/bin" >> /etc/profile
         source /etc/profile
     fi
 
@@ -506,7 +509,7 @@ function Install_Mysql()
     
     if [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/${MW_DB_VERSION}/bin | wc -l` -eq 0 ]
     then
-        echo -e "\nexport DB_HOME=${INSTALL_PATH}/${MW_DB_VERSION}
+        echo -e "export DB_HOME=${INSTALL_PATH}/${MW_DB_VERSION}
 export PATH="$PATH:${INSTALL_PATH}/${MW_DB_VERSION}/bin"" >> /etc/profile
         source /etc/profile
     fi
@@ -565,7 +568,7 @@ function Install_Postgresql()
     
     if [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/bin | wc -l` -eq 0 ]
     then
-        echo -e "\nexport PATH=${PATH}:${INSTALL_PATH}/${MW_DB_VERSION}/bin" >> /etc/profile
+        echo -e "export PATH=${PATH}:${INSTALL_PATH}/${MW_DB_VERSION}/bin" >> /etc/profile
         source /etc/profile
     fi
 
@@ -719,6 +722,8 @@ function Uninstall_Was_Tomcat()
     else
         local jump=50
         MW_WAS_VERSION=`cat $VERSION | grep "tomcat" | cut -f 1 -d' '`
+        JAVA_VERSION=`cat $VERSION | grep "java" | cut -f 1 -d ' '`
+
         INSTALL_PATH=`cat $VERSION | grep $MW_WAS_VERSION | cut -f 2 -d ' '`
         #TODO: JAVA_VERSION 정의해줘야 됨. .version.out 파일 걸 가져오기
 
@@ -738,8 +743,10 @@ function Uninstall_Was_Tomcat()
         #확인필요, tomcat path라인 삭제 구문
         sed -i "/$MW_WAS_VERSION\/bin/d" /etc/profile
         sed -i "/$JAVA_VERSION/d" /etc/profile
+        source /etc/profile
 
-        sed -i '/tomcat/d' $VERSION
+        sed -i "/$MW_WAS_VERSION/d" $VERSION
+        sed -i "/$JAVA_VERSION/d" $VERSION
 
         local MSG="Uninstallation finished.\
         \nTerminate menu"
@@ -822,8 +829,9 @@ function Uninstall_Db_Postgresql()
 
         #TODO: 경로에 '/' 포함되어 있어서 처리 필요
         sed -i "/$MW_DB_VERSION\/bin/d" /etc/profile
+        source /etc/profile
 
-        sed -i '/postgresql/d' $VERSION
+        sed -i "/$MW_DB_VERSION/d" $VERSION
 
         userdel postgres
         

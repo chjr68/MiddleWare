@@ -23,6 +23,8 @@ VERSION='/tmp/.version.out'
 
 INSTALL_PATH=/usr/local/src
 
+PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
+
 ############################################### 옵션 기본값
 
 OPT_NONE=-9999 #초기값
