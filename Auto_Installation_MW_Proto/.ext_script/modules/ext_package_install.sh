@@ -237,6 +237,30 @@ function Install_Rpms()
                     yum -y install ncurses* >> $RPM_LOG 2>&1
                 fi
                 ;;    
+            python3) 
+                if [ -z "`rpm -qa python3`" ]
+                then            
+                    yum -y install python3 >> $RPM_LOG 2>&1
+                fi
+                ;;  
+            python3-devel) 
+                if [ -z "`rpm -qa python3-devel`" ]
+                then            
+                    yum -y install python3-devel >> $RPM_LOG 2>&1
+                fi
+                ;;  
+            readline-devel) 
+                if [ -z "`rpm -qa readline-devel`" ]
+                then            
+                    yum -y install readline-devel >> $RPM_LOG 2>&1
+                fi
+                ;;  
+            zlib-devel) 
+                if [ -z "`rpm -qa zlib-devel`" ]
+                then            
+                    yum -y install zlib-devel >> $RPM_LOG 2>&1
+                fi
+                ;;  
         esac
     done
 
@@ -307,5 +331,4 @@ function Check_Rpms_Dependency()
 
     Write_Log $FUNCNAME $LINENO "end"
 }
-
 

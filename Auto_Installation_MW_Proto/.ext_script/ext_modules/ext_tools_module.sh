@@ -42,14 +42,14 @@ function Show_Web_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
     
-    if [ `cat /tmp/.version.out | grep "httpd" | wc -l` -eq 0 ]
+    if [ `cat $VERSION | grep "httpd" | wc -l` -eq 0 ]
     then
         local MSG="Apache is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
         Show_Menu
     else
-        MW_WEB_VERSION=`cat /tmp/.version.out | grep -E "httpd" | cut -f 2 -d' '`
+        MW_WEB_VERSION=`cat $VERSION | grep -E "httpd" | cut -f 1 -d' '`
 
         local MSG="Middleware Type / Version\
         \n'$MW_WEB_VERSION'"
@@ -66,14 +66,14 @@ function Show_Was_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
     
-    if [ `cat /tmp/.version.out | grep "tomcat" | wc -l` -eq 0 ]
+    if [ `cat $VERSION | grep "tomcat" | wc -l` -eq 0 ]
     then
         local MSG="Tomcat is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
         Show_Menu 
     else
-        MW_WAS_VERSION=`cat /tmp/.version.out | grep -E "tomcat" | cut -f 2 -d' '`
+        MW_WAS_VERSION=`cat $VERSION | grep -E "tomcat" | cut -f 1 -d' '`
 
         local MSG="Middleware Type / Version\
         \n'$MW_WAS_VERSION'"
@@ -90,14 +90,14 @@ function Show_Db_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
     
-    if [ `cat /tmp/.version.out | grep -E "maria|mysql|postgre" | wc -l` -eq 0 ]
+    if [ `cat $VERSION | grep -E "maria|mysql|postgre" | wc -l` -eq 0 ]
     then
         local MSG="DB is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
         Show_Menu 
     else
-        MW_DB_VERSION=`cat /tmp/.version.out | grep -E "maria|mysql|postgre" | cut -f 2 -d' '`
+        MW_DB_VERSION=`cat $VERSION | grep -E "maria|mysql|postgre" | cut -f 1 -d' '`
 
         local MSG="Middleware Type / Version\
         \n'$MW_DB_VERSION'"

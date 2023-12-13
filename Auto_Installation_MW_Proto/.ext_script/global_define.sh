@@ -33,7 +33,7 @@ OPT_NOT_INSTALL=0 #설치 제외
 
 ################################################ 설치, 제어 옵션
 
-CHKRPMLIST="net-tools tcpdump dialog ntpdate rdate ntp sshpass gdb wget lsof ipmitool rsyslog rsyslog-openssl ldap radius tacacs make gcc gcc-c++ expat expat-devel java libaio ncurses"
+CHKRPMLIST="net-tools tcpdump dialog ntpdate rdate ntp sshpass gdb wget lsof ipmitool rsyslog rsyslog-openssl ldap radius tacacs make gcc gcc-c++ expat expat-devel java libaio ncurses python3 python3-devel readline-devel zlib-devel"
 
 #* Dialog, 기본 OK 로 넘어가는 옵션
 GOPT_SKIP_DIALOG_DEFAULT_OK=${OPT_NONE} #0: yes 선택, 1: no 선택, ${OPT_NONE} : 다이얼로그

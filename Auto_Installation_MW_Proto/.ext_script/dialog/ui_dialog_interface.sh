@@ -30,9 +30,10 @@ function Show_Menu()
     1 "Install Middleware" \
     2 "Show Version" \
     3 "Uninstall" \
-    4 "Securitty Setting" \
-    5 "Utils" \
     2> $OUTFILE
+    #4 "Securitty Setting" \
+    #5 "Utils" \
+    
 
     item=$(<${OUTFILE})
 
@@ -65,13 +66,12 @@ function Show_Menu()
             #UnInstall
             Uninstall
             ;;
-        4)
-            #Security Setting
-            ;;
-        5) 
-            #Utils
-            ShowMenuTMSUtils
-            ;;
+        # 4)
+        #     #Security Setting
+        #     ;;
+        # 5) 
+        #     #Utils
+        #     ;;
         *)
             exit
             ;;
@@ -81,13 +81,6 @@ function Show_Menu()
     #각 옵션은, 자체적으로 독립적으로 수행이 가능해야 함.
     MENU_OPT_MAIN_INSTALL=${OPT_NONE}
 
-    #TODO: 2023.05.24 여기외에 마땅한 곳이 없다. 과거 rpm 삭제
-    #TODO: 모듈 분리 필요 => 모든 rpm 을 한번에 압축해제, 삭제하면서 문제 발생
-    #각 사용 모듈별로 rpm, python, syslog등 모듈이 분리되어야 적절하게 수행 가능
-    #TODO: 향후 개선
-    # delete_tms_dependency_rpms_directory
-
-    #TODO: INSTALL 이 끝나면 종료하는 것도 고민
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -234,7 +227,7 @@ function Select_Apache_Version()
     #WEB apache 파일 포맷: httpd-숫자.숫자.숫자
     #정규표현식: '[0-9]{1,3}\-[0-9]{1,3}\-[0-9]{1,3}'
     #mw_pwd: 파일위치 절대경로 확인 필요
-    #
+    
     local mw_pwd=`find $g_path/package/1.WEB/ -maxdepth 1 | grep tar.gz | grep -Eo 'httpd-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
 
     \cp -f /dev/null $TMPFILE
@@ -359,7 +352,6 @@ function Select_AprUtil_Version()
         APR_UTIL_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
     fi
 
-
     Write_Log $FUNCNAME $LINENO "end"
 }
 
@@ -470,7 +462,7 @@ function Select_Db_Version()
             ;;
         3) 
             #PostgreSQL 파일 포맷:
-            #local mw_pwd=`find $g_path/package/3.DB/MySQL -maxdepth 1 | grep tar.gz | grep -Eo 'apache-tomcat-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
+            local mw_pwd=`find $g_path/package/3.DB/PostgreSQL -maxdepth 1 | grep tar.gz | grep -Eo 'postgresql-[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
             ;;   
     esac
 

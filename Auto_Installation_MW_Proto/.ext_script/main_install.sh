@@ -83,6 +83,7 @@ function Make_Dir()
 
     #설치 디렉토리 생성
     mkdir -p ${INSTALL_PATH} # 제일 먼저 만들어야 함
+    echo "PATH=${INSTALL_PATH}" >> $TMPFILE
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -139,7 +140,7 @@ function Install_Apache_Apr()
     make install > /dev/null 2>&1
 
     #TODO: 모듈버전을 넣어야 됨.
-    echo $APR_VERSION > $VERSION
+    echo $APR_VERSION >> $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -159,7 +160,7 @@ function Install_Apache_Apr_Util()
     make > /dev/null 2>&1
     make install > /dev/null 2>&1
 
-    echo $APR_UTIL_VERSION > $VERSION
+    echo $APR_UTIL_VERSION >> $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -179,7 +180,7 @@ function Install_Apache_Pcre()
     make > /dev/null 2>&1
     make install > /dev/null 2>&1
 
-    echo $PCRE_VERSION > $VERSION
+    echo $PCRE_VERSION >> $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -195,7 +196,7 @@ function Install_Apache()
     tar zxf ${g_path}/package/1.WEB/${MW_WEB_VERSION}.tar.gz -C ${g_path}/package/1.WEB
 
     cd ${g_path}/package/1.WEB/${MW_WEB_VERSION}
-    ./configure --prefix=$INSTALL_PATH/apache \
+    ./configure --prefix=$INSTALL_PATH/${MW_WEB_VERSION} \
     --enable-module=so --enable-rewrite --enable-so \
     --with-apr=$INSTALL_PATH/apr \
     --with-apr-util=$INSTALL_PATH/apr-util \
@@ -211,14 +212,13 @@ function Set_Apache_Config()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    #TODO: 이부분 잘 안되는듯, 서비스 재시작 에러나서 ps로 UID확인 및 4개프로세스 킬하면 재시작 잘됨
-    cp $INSTALL_PATH/apache/bin/apachectl /etc/init.d/httpd
+    cp $INSTALL_PATH/${MW_WEB_VERSION}/bin/apachectl /etc/init.d/httpd
     echo -e "\n#
 # chkconfig: 2345 90 90
 # description: init file for Apache server daemon
-# processname: $INSTALL_PATH/apache/bin/apachectl
-# config: $INSTALL_PATH/apache/conf/httpd.conf
-# pidfile: $INSTALL_PATH/apache/logs/httpd.pid
+# processname: $INSTALL_PATH/${MW_WEB_VERSION}/bin/apachectl
+# config: $INSTALL_PATH/${MW_WEB_VERSION}/conf/httpd.conf
+# pidfile: $INSTALL_PATH/${MW_WEB_VERSION}/logs/httpd.pid
 #" >> /etc/init.d/httpd
     chkconfig --add httpd
 
@@ -232,8 +232,8 @@ Type=forking
 User=root
 Group=root
 
-ExecStart=$INSTALL_PATH/apache/bin/apachectl start
-ExecStop=$INSTALL_PATH/apache/bin/apachectl stop
+ExecStart=$INSTALL_PATH/${MW_WEB_VERSION}/bin/apachectl start
+ExecStop=$INSTALL_PATH/${MW_WEB_VERSION}/bin/apachectl stop
 
 Umask=007
 RestartSec=10
@@ -254,7 +254,7 @@ WantedBy=multi-user.target" > /etc/systemd/system/httpd.service
     systemctl enable httpd > /dev/null 2>&1
     systemctl restart httpd
 
-    echo $MW_WEB_VERSION > $VERSION
+    echo $MW_WEB_VERSION $INSTALL_PATH >> $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -323,7 +323,7 @@ WantedBy=multi-user.target" > /etc/systemd/system/tomcat.service
     systemctl enable tomcat > /dev/null 2>&1
     systemctl restart tomcat
     
-    echo $MW_WAS_VERSION > $VERSION
+    echo $MW_WAS_VERSION >> $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -457,7 +457,7 @@ log-bin                         = /data/mariadb/log-bin/mysql-bin" > /etc/my.cnf
     #TODO: 서비스 systemctl start mysql로 됨 (서비스명 변경 완료)
     systemctl start mariadb
 
-    echo $MW_DB_VERSION > $VERSION
+    echo $MW_DB_VERSION >> $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -542,7 +542,7 @@ pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
     chkconfig --add mysql.service
     systemctl start mysql.service
 
-    echo $MW_DB_VERSION > $VERSION
+    echo $MW_DB_VERSION >> $VERSION
 
     # #mysql root password 변경, /data/mysql/.passwd 파일 읽어서 초기 패스워드 사용해야 됨
     # mysql -uroot -p'초기패스워드' -e "alter user 'root'@'localhost' identified by 'Sniper13@$';"
@@ -555,9 +555,46 @@ function Install_Postgresql()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
+    #TODO: Progressbar 하드코딩 말고 로직 변경
+    local jump=50
 
+    MSG="PostgreSQL Install ( $MW_DB_VERSION )"
+    Progress=$(($Progress+$jump))
+    echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
+    tar zxf ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}.tar.gz -C ${g_path}/package/3.DB/PostgreSQL
+    
+    if [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/bin | wc -l` -eq 0 ]
+    then
+        echo -e "\nexport PATH=${PATH}:${INSTALL_PATH}/${MW_DB_VERSION}/bin" >> /etc/profile
+        source /etc/profile
+    fi
 
-    Write_Log $FUNCNAME $LINENO "end"   
+    #사용자 생성
+    if [ `cat /etc/group | grep postgres | wc -l` -eq 0 ]
+    then
+        useradd -d ${INSTALL_PATH} postgres > /dev/null 2>&1
+    fi
+
+    cd ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}
+    ./configure --prefix=${INSTALL_PATH}/${MW_DB_VERSION} --enable-depend --enable-nls=utf-8 --with-python > /dev/null 2>&1
+
+    make > /dev/null 2>&1
+    make install > /dev/null 2>&1
+
+    mkdir -p /data/postgresql
+    chown -R postgres:postgres /data/
+
+    chown -R postgres:postgres ${INSTALL_PATH}/$MW_DB_VERSION
+
+    su - postgres -c "${INSTALL_PATH}/$MW_DB_VERSION/bin/initdb -E utf-8 -D /data/postgresql" > /dev/null 2>&1
+
+    #postgre 구동
+    cd ${INSTALL_PATH}/$MW_DB_VERSION/bin/
+    su - postgres -c "postgres -D /data/postgresql/ &" > /dev/null 2>&1 | echo -ne '\n'
+
+    echo $MW_DB_VERSION >> $VERSION
+
+    Write_Log $FUNCNAME $LINENO "end"
 }
 
 function Uninstall()
@@ -607,8 +644,13 @@ function Uninstall_Web_Apache()
         Show_Menu
     else
         local jump=50
-        MW_WEB_VERSION=`cat /tmp/.version.out | grep "httpd" | cut -f 2 -d' '`
+        MW_WEB_VERSION=`cat $VERSION | grep "httpd" | cut -f 1 -d' '`
 
+        #첫번째 줄은 항상 경로로 입력하고 첫줄만 가져오는 코드?
+        INSTALL_PATH=`cat $VERSION | grep $MW_WEB_VERSION | cut -f 2 -d ' '`
+        APR_VERSION=`cat $VERSION | grep "apr" | head -1`
+        APR_UTIL_VERSION=`cat $VERSION | grep "apr-util"`
+        PCRE_VERSION=`cat $VERSION | grep "pcre"`
         MSG="Apache Uninstall ( $MW_WEB_VERSION )"
         Progress=$(($Progress+$jump))
         echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
@@ -616,23 +658,29 @@ function Uninstall_Web_Apache()
         systemctl stop httpd
 
         #TODO: apr, apr-util, pcre 각각 다 지워줘야 됨
-        cd ${g_path}/package/module/apr-1.7.4
+        cd ${g_path}/package/module/${APR_VERSION}
         make distclean > /dev/null 2>&1
         
-        cd ${g_path}/package/module/apr-util-1.6.3
+        cd ${g_path}/package/module/${APR_UTIL_VERSION}
         make distclean > /dev/null 2>&1
 
-        cd ${g_path}/package/module/pcre-8.45
+        cd ${g_path}/package/module/${PCRE_VERSION}
         make distclean > /dev/null 2>&1
 
         rm -rf /etc/systemd/system/httpd.service
         rm -rf /etc/init.d/httpd
         rm -rf ${g_path}/package/1.WEB/${MW_WEB_VERSION}
-        rm -rf ${INSTALL_PATH}/*
+        rm -rf ${g_path}/package/module/${APR_VERSION}
+        rm -rf ${g_path}/package/module/${APR_UTIL_VERSION}
+        rm -rf ${g_path}/package/module/${PCRE_VERSION}
+        rm -rf ${INSTALL_PATH}
 
-        sed -i '/httpd/d' /tmp/.version.out
+        sed -i "/$MW_WEB_VERSION/d" $VERSION
+        sed -i "/$APR_VERSION/d" $VERSION
+        sed -i "/$APR_UTIL_VERSION/d" $VERSION
+        sed -i "/$PCRE_VERSION/d" $VERSION
 
-        local MSG="Uninstallation finished.\
+        local MSG="Uninstallation finished.
         \nTerminate menu"
 
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
@@ -667,7 +715,8 @@ function Uninstall_Was_Tomcat()
         Show_Menu
     else
         local jump=50
-        MW_WAS_VERSION=`cat /tmp/.version.out | grep "tomcat" | cut -f 2 -d' '`
+        MW_WAS_VERSION=`cat $VERSION | grep "tomcat" | cut -f 1 -d' '`
+        INSTALL_PATH=`cat $VERSION | grep $MW_WAS_VERSION | cut -f 2 -d ' '`
         #TODO: JAVA_VERSION 정의해줘야 됨. .version.out 파일 걸 가져오기
 
         MSG="Tomcat Uninstall ( $MW_WAS_VERSION )"
@@ -677,13 +726,13 @@ function Uninstall_Was_Tomcat()
         systemctl stop tomcat
         rm -rf /etc/systemd/system/tomcat.service
         rm -rf ${g_path}/package/2.WAS/${MW_WAS_VERSION}
-        rm -rf ${INSTALL_PATH}/*
+        rm -rf ${INSTALL_PATH}
 
         #확인필요, tomcat path라인 삭제 구문
         sed -i "/$MW_WAS_VERSION\/bin/d" /etc/profile
         sed -i "/$JAVA_VERSION/d" /etc/profile
 
-        sed -i '/tomcat/d' /tmp/.version.out
+        sed -i '/tomcat/d' $VERSION
 
         local MSG="Uninstallation finished.\
         \nTerminate menu"
@@ -698,7 +747,7 @@ function Uninstall_Db()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    case $MENU_OPT_WEB_TYPE in
+    case $MENU_OPT_DB_TYPE in
         1) 
             Uninstall_Db_Mariadb
             ;;
@@ -719,6 +768,60 @@ function Uninstall_Db_Mariadb()
     Write_Log $FUNCNAME $LINENO "start"
 
 
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Uninstall_Db_Mysql()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Uninstall_Db_Postgresql()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    if [ `cat /tmp/.version.out | grep "postgresql" | wc -l` -eq 0 ]
+    then
+        local MSG="PostgreSQL is not installed."
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        Show_Menu
+    else
+        local jump=50
+        MW_DB_VERSION=`cat $VERSION | grep "postgresql" | cut -f 1 -d ' '`
+        INSTALL_PATH=`cat $VERSION | grep $MW_DB_VERSION | cut -f 2 -d ' '`
+        #TODO: .version.out 파일 걸 가져오기
+
+        MSG="PostgreSQL Uninstall ( $MW_DB_VERSION )"
+        Progress=$(($Progress+$jump))
+        echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
+
+        kill `cat /data/postgresql/postmaster.pid | head -1` > /dev/null 2>&1 | echo -ne '\n'
+
+        cd ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}
+        make distclean > /dev/null 2>&1
+
+        rm -rf ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}
+        rm -rf ${INSTALL_PATH}
+        rm -rf /data
+
+        #TODO: 경로에 '/' 포함되어 있어서 처리 필요
+        sed -i "/$MW_DB_VERSION\/bin/d" /etc/profile
+
+        sed -i '/postgresql/d' $VERSION
+
+        userdel postgres
+        
+        local MSG="Uninstallation finished.\
+        \nTerminate menu"
+
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+    fi
 
     Write_Log $FUNCNAME $LINENO "end"
 }

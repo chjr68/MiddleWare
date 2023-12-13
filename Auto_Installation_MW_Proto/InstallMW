@@ -23,7 +23,7 @@ source ${g_path}/.ext_script/global_define.sh #전역변수 지정
 #외부 패키지
 source ${g_path}/.ext_script/modules/ext_package_install.sh #미들웨어 외부모듈 설치
 
-#source ${g_path}/.ext_script/ext_modules/ext_tools_module.sh #기타 설치외 모듈
+source ${g_path}/.ext_script/ext_modules/ext_tools_module.sh #기타 설치외 모듈
 
 #log 관련
 source ${g_path}/.ext_script/debug/debug.sh #로그파일 초기화 및 로깅
@@ -46,7 +46,7 @@ function main()
     source ~/.bash_profile    
 
     Init_Log #로그 초기화
-    Write_Log $FUNCNAME $LINENO "====================================== Middleware Installation STARTS (${DEF_PRODUCT_TYPE}) ============================="
+    Write_Log $FUNCNAME $LINENO "=================== Middleware Installation STARTS (${DEF_PRODUCT_TYPE}) ==================="
    
     BACKTITLE="Middleware Installer V1.0"
     TITLE="Middleware Auto Installer"
@@ -63,9 +63,7 @@ function main()
     Check_Rpms_Dependency
 
     #실제 설치 수행
-    
     Show_Menu
-
 
     #압축 해제 디렉토리 삭제
     Delete_Rpms_Directory
