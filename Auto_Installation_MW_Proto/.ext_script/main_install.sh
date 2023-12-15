@@ -44,6 +44,8 @@ function Install_Middleware()
             ;;   
     esac
 
+    source /etc/profile
+
     local MSG="Installation finished.\
     \nTerminate menu"
 
@@ -264,6 +266,12 @@ WantedBy=multi-user.target" > /etc/systemd/system/httpd.service
         ps -ef | grep httpd | awk '{print $2}' | xargs kill -9 > /dev/null 2>&1
     fi
 
+    # httpd v2.0.x 추가 수행
+    if [ $major == 2 ] && [ $minor == 0 ] 
+    then
+        sed -i '/^Group #-1/s@#-1@nobody@' $INSTALL_PATH/$MW_WEB_VERSION/conf/httpd.conf
+    fi
+
     #서비스 시작
     systemctl daemon-reload
     systemctl enable httpd >> ${g_path}/trace_log/apache.log 2>&1
@@ -399,9 +407,9 @@ function Install_Mariadb()
     MSG="MariaDB Install ( $MW_DB_VERSION )"
     Progress=$(($Progress+$jump))
     echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
-    tar zxf ${g_path}/package/3.DB/MariaDB/${MW_DB_VERSION}-linux-systemd-x86_64.tar.gz -C ${INSTALL_PATH}
+    tar zxf ${g_path}/package/3.DB/MariaDB/${MW_DB_VERSION}-linux-systemd*.tar.gz -C ${INSTALL_PATH}
 
-    mv ${INSTALL_PATH}/${MW_DB_VERSION}-linux-systemd-x86_64 ${INSTALL_PATH}/${MW_DB_VERSION}
+    mv ${INSTALL_PATH}/${MW_DB_VERSION}-linux-systemd* ${INSTALL_PATH}/${MW_DB_VERSION}
     
     #사용자 생성
     if [ `cat /etc/group | grep maria | wc -l` -eq 0 ]
@@ -423,6 +431,20 @@ function Install_Mariadb()
     touch /var/log/mariadb.log
     chmod 644 /var/log/mariadb.log
     chown maria:maria /var/log/mariadb.log
+
+    # major=$(echo ${MW_DB_VERSION} | cut -d'-' -f2  | cut -d'.' -f1)
+    # minor=$(echo ${MW_DB_VERSION} | cut -d'-' -f2  | cut -d'.' -f2)
+    # patch=$(echo ${MW_DB_VERSION} | cut -d'-' -f2  | cut -d'.' -f3)
+
+    # if [ $major == 10 ] && [ $minor == 2 ] 
+    # then
+    #     \cp -f $INSTALL_PATH/$MW_DB_VERSION/support-files/mysql.server /etc/init.d/mariadb.service
+    # elif [ $major == 10 ] && [ $minor == 0 ]
+    #     \cp -f $INSTALL_PATH/$MW_DB_VERSION/support-files/mysql.server /etc/init.d/mariadb.service
+
+    # else
+    #     echo "else start"
+    # fi
 
     \cp -f $INSTALL_PATH/$MW_DB_VERSION/support-files/mysql.server /etc/init.d/mariadb.service
     sed -i '/^basedir=$/s@=@='$INSTALL_PATH/$MW_DB_VERSION'@' /etc/init.d/mariadb.service
@@ -658,6 +680,13 @@ function Uninstall()
             ;;   
     esac
 
+    source /etc/profile
+
+    local MSG="Uninstallation finished.
+    \nTerminate menu"
+
+    dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
     Write_Log $FUNCNAME $LINENO "end"
 }
 
@@ -713,6 +742,8 @@ function Uninstall_Web_Apache()
         cd ${g_path}/package/module/${PCRE_VERSION}
         make distclean > /dev/null 2>&1
 
+        cd ${g_path}
+
         rm -rf /etc/systemd/system/httpd.service
         rm -rf /etc/init.d/httpd
         rm -rf ${g_path}/package/1.WEB/${MW_WEB_VERSION}
@@ -726,10 +757,6 @@ function Uninstall_Web_Apache()
         sed -i "/$APR_UTIL_VERSION/d" $VERSION
         sed -i "/$PCRE_VERSION/d" $VERSION
 
-        local MSG="Uninstallation finished.
-        \nTerminate menu"
-
-        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
     fi
 
     Write_Log $FUNCNAME $LINENO "end"
@@ -788,10 +815,6 @@ function Uninstall_Was_Tomcat()
         sed -i "/$MW_WAS_VERSION/d" $VERSION
         sed -i "/$JAVA_VERSION/d" $VERSION
 
-        local MSG="Uninstallation finished.\
-        \nTerminate menu"
-
-        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
     fi
     
     Write_Log $FUNCNAME $LINENO "end"
@@ -861,10 +884,6 @@ function Uninstall_Db_Mariadb()
 
         sed -i "/$MW_DB_VERSION/d" $VERSION
         
-        local MSG="Uninstallation finished.\
-        \nTerminate menu"
-
-        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
     fi
 
     Write_Log $FUNCNAME $LINENO "end"
@@ -920,10 +939,6 @@ function Uninstall_Db_Mysql()
 
         sed -i "/$MW_DB_VERSION/d" $VERSION
         
-        local MSG="Uninstallation finished.\
-        \nTerminate menu"
-
-        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
     fi
 
     Write_Log $FUNCNAME $LINENO "end"
@@ -970,10 +985,6 @@ function Uninstall_Db_Postgresql()
 
         userdel postgres
         
-        local MSG="Uninstallation finished.\
-        \nTerminate menu"
-
-        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
     fi
 
     Write_Log $FUNCNAME $LINENO "end"
