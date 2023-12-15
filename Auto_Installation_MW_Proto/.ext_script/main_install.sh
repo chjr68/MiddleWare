@@ -138,8 +138,8 @@ function Install_Apache_Apr()
 
     cd ${g_path}/package/module/${APR_VERSION}
     ./configure --prefix=$INSTALL_PATH/apr > /dev/null 2>&1
-    make > /dev/null 2>&1
-    make install > /dev/null 2>&1
+    make > ${g_path}/trace_log/apr.log 2>&1
+    make install >> ${g_path}/trace_log/apr.log 2>&1
 
     #TODO: 모듈버전을 넣어야 됨.
     echo $APR_VERSION >> $VERSION
@@ -159,8 +159,8 @@ function Install_Apache_Apr_Util()
 
     cd ${g_path}/package/module/${APR_UTIL_VERSION}
     ./configure --prefix=$INSTALL_PATH/apr-util --with-apr=$INSTALL_PATH/apr > /dev/null 2>&1
-    make > /dev/null 2>&1
-    make install > /dev/null 2>&1
+    make > ${g_path}/trace_log/apr-util.log 2>&1
+    make install > ${g_path}/trace_log/apr-util.log 2>&1
 
     echo $APR_UTIL_VERSION >> $VERSION
 
@@ -178,9 +178,9 @@ function Install_Apache_Pcre()
     tar zxf ${g_path}/package/module/${PCRE_VERSION}.tar.gz -C ${g_path}/package/module
 
     cd ${g_path}/package/module/${PCRE_VERSION}
-    ./configure --prefix=$INSTALL_PATH/pcre > /dev/null 2>&1
-    make > /dev/null 2>&1
-    make install > /dev/null 2>&1
+    ./configure --prefix=$INSTALL_PATH/pcre > ${g_path}/trace_log/pcre.log 2>&1
+    make >> ${g_path}/trace_log/pcre.log 2>&1
+    make install >> ${g_path}/trace_log/pcre.log 2>&1
 
     echo $PCRE_VERSION >> $VERSION
 
@@ -198,14 +198,27 @@ function Install_Apache()
     tar zxf ${g_path}/package/1.WEB/${MW_WEB_VERSION}.tar.gz -C ${g_path}/package/1.WEB
 
     cd ${g_path}/package/1.WEB/${MW_WEB_VERSION}
-    ./configure --prefix=$INSTALL_PATH/${MW_WEB_VERSION} \
-    --enable-module=so --enable-rewrite --enable-so \
-    --with-apr=$INSTALL_PATH/apr \
-    --with-apr-util=$INSTALL_PATH/apr-util \
-    --with-pcre=$INSTALL_PATH/pcre/bin/pcre-config \
-    --enable-mods-shared=all > /dev/null 2>&1
-    make > /dev/null 2>&1
-    make install > /dev/null 2>&1
+
+    major=$(echo ${MW_WEB_VERSION} | cut -d'-' -f2  | cut -d'.' -f1)
+    minor=$(echo ${MW_WEB_VERSION} | cut -d'-' -f2  | cut -d'.' -f2)
+    patch=$(echo ${MW_WEB_VERSION} | cut -d'-' -f2  | cut -d'.' -f3)
+
+    if [ $major == 2 ] && [ $minor -ge 4 ] 
+    then
+        ./configure --prefix=$INSTALL_PATH/${MW_WEB_VERSION} \
+        --enable-module=so --enable-rewrite --enable-so \
+        --with-apr=$INSTALL_PATH/apr \
+        --with-apr-util=$INSTALL_PATH/apr-util \
+        --with-pcre=$INSTALL_PATH/pcre/bin/pcre-config \
+        --enable-mods-shared=all > ${g_path}/trace_log/apache.log 2>&1
+    else
+        ./configure --prefix=$INSTALL_PATH/${MW_WEB_VERSION} \
+        --enable-module=so --enable-rewrite --enable-so \
+        --enable-mods-shared=all > ${g_path}/trace_log/apache.log 2>&1
+    fi
+
+    make >> ${g_path}/trace_log/apache.log 2>&1
+    make install >> ${g_path}/trace_log/apache.log 2>&1
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -248,12 +261,12 @@ WantedBy=multi-user.target" > /etc/systemd/system/httpd.service
     #TODO: 서비스없을떄 예외처리
     if [ `ps -ef | grep httpd | wc -l` -gt 1 ]
     then
-        ps -ef | grep httpd | awk '{print $2}' | xargs kill -9
+        ps -ef | grep httpd | awk '{print $2}' | xargs kill -9 > /dev/null 2>&1
     fi
 
     #서비스 시작
     systemctl daemon-reload
-    systemctl enable httpd > /dev/null 2>&1
+    systemctl enable httpd >> ${g_path}/trace_log/apache.log 2>&1
     systemctl restart httpd
 
     echo $MW_WEB_VERSION $INSTALL_PATH >> $VERSION
@@ -267,9 +280,20 @@ function Install_Was()
 
     case $MENU_OPT_WAS_TYPE in
         1) 
+            Install_Tomcat_Java
+
             Install_Tomcat
             ;;
     esac
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Install_Tomcat_Java()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -284,7 +308,20 @@ function Install_Tomcat()
     echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
     tar zxf ${g_path}/package/2.WAS/${MW_WAS_VERSION}.tar.gz -C ${INSTALL_PATH}
 
-    JAVA_VERSION=`rpm -qa | grep -E 'java-[0-9]{1,2}\-openjdk\-[0-9]{1,2}\.'`
+    JAVA_VERSION=`rpm -qa | grep -E 'java-[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}-openjdk-[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}'`
+
+    # 버전별 의존성 문제 발생 시, 예외처리
+    # major=$(echo ${MW_WAS_VERSION} | cut -d'-' -f2  | cut -d'.' -f1)
+    # minor=$(echo ${MW_WAS_VERSION} | cut -d'-' -f2  | cut -d'.' -f2)
+    # patch=$(echo ${MW_WAS_VERSION} | cut -d'-' -f2  | cut -d'.' -f3)
+
+    # if [ $major == 8 ] && [ $minor -ge 5 ] 
+    # then
+    #     echo "version diff"
+    # else
+    #     echo "version diff"
+    # fi
+
 
     #TODO: java 버전바뀌는거 체크해야 됨, 이미 환경변수 있을경우 패스하는 로직, 자바경로 자동으로 찾아서 넣어주는 로직
     if [ `cat /etc/profile | grep "export JAVA_HOME=" | wc -l` -eq 0 ]
@@ -370,7 +407,7 @@ function Install_Mariadb()
     if [ `cat /etc/group | grep maria | wc -l` -eq 0 ]
     then
         groupadd maria
-        useradd -g maria maria
+        useradd -g maria maria > /dev/null 2>&1
     fi
 
     #메인 디렉토리 권한변경
@@ -453,7 +490,7 @@ log-bin                         = /data/mariadb/log-bin/mysql-bin" > /etc/my.cnf
     cd ${INSTALL_PATH}/${MW_DB_VERSION}/scripts 
     ./mysql_install_db --user=maria --basedir="${INSTALL_PATH}/${MW_DB_VERSION}" --datadir=/data/mariadb/master --defaults-file=/etc/my.cnf > /dev/null 2>&1
     
-    #심볼릭링크 (mariadb 실행파일에 /usr/local/mysql 경로가 하드코딩되어있어서 추가 필요)
+    #심볼릭링크 (mariadb 실행파일에 /usr/local/mysql 경로가 하드코딩 되어있어서 추가 필요)
     ln -s ${INSTALL_PATH}/${MW_DB_VERSION} /usr/local/mysql
 
 
@@ -483,10 +520,8 @@ function Install_Mysql()
     if [ `cat /etc/group | grep mysql | wc -l` -eq 0 ]
     then
         groupadd mysql
-        useradd -M -s /sbin/nologin -g mysql mysql
+        useradd -M -s /sbin/nologin -g mysql mysql > /dev/null 2>&1
     fi
-
-
 
     #메인 디렉토리 생성 및 권한변경
     mkdir -p ${INSTALL_PATH}/${MW_DB_VERSION}/log
@@ -549,6 +584,11 @@ pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
 
     # #mysql root password 변경, /data/mysql/.passwd 파일 읽어서 초기 패스워드 사용해야 됨
     # mysql -uroot -p'초기패스워드' -e "alter user 'root'@'localhost' identified by 'Sniper13@$';"
+
+    local MSG="Please Remember Initial Password Route\
+    \n/data/mysql/.passwd"
+
+    dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -771,7 +811,6 @@ function Uninstall_Db()
         3)
             Uninstall_Db_Postgresql
             ;;
-
     esac
 
     Write_Log $FUNCNAME $LINENO "end"
@@ -781,7 +820,52 @@ function Uninstall_Db_Mariadb()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
+    if [ `cat /tmp/.version.out | grep "mariadb" | wc -l` -eq 0 ]
+    then
+        local MSG="MariaDB is not installed."
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
+        Show_Menu
+    else
+        local jump=50
+        MW_DB_VERSION=`cat $VERSION | grep "mariadb" | cut -f 1 -d ' '`
+        INSTALL_PATH=`cat $VERSION | grep $MW_DB_VERSION | cut -f 2 -d ' '`
+        #TODO: .version.out 파일 걸 가져오기
+
+        MSG="MariaDB Uninstall ( $MW_DB_VERSION )"
+        Progress=$(($Progress+$jump))
+        echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
+
+        if [ `systemctl is-active mariadb` == "active" ]
+        then
+            systemctl stop mariadb
+        fi
+
+        if [ `cat /etc/group | grep maria | wc -l` -eq 1 ]
+        then
+            userdel maria
+        fi
+
+        rm -rf /usr/local/mysql
+        rm -rf /var/log/mariadb.log
+        rm -rf /etc/init.d/mariadb.service
+        rm -rf /etc/systemd/system/mariadb.service
+        rm -rf /etc/my.cnf
+
+        rm -rf ${INSTALL_PATH}
+        rm -rf /data
+
+        #TODO: 경로에 '/' 포함되어 있어서 처리 필요
+        sed -i "/$MW_DB_VERSION\/bin/d" /etc/profile
+        source /etc/profile
+
+        sed -i "/$MW_DB_VERSION/d" $VERSION
+        
+        local MSG="Uninstallation finished.\
+        \nTerminate menu"
+
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+    fi
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -790,7 +874,57 @@ function Uninstall_Db_Mysql()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
+    if [ `cat /tmp/.version.out | grep "mysql" | wc -l` -eq 0 ]
+    then
+        local MSG="MySQL is not installed."
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
+        Show_Menu
+    else
+        local jump=50
+        MW_DB_VERSION=`cat $VERSION | grep "mysql" | cut -f 1 -d ' '`
+        INSTALL_PATH=`cat $VERSION | grep $MW_DB_VERSION | cut -f 2 -d ' '`
+        #TODO: .version.out 파일 걸 가져오기
+
+        MSG="MySQL Uninstall ( $MW_DB_VERSION )"
+        Progress=$(($Progress+$jump))
+        echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
+
+        if [ `systemctl is-active mysql` == "active" ]
+        then
+            systemctl stop mysql
+        fi
+
+        if [ `cat /etc/group | grep mysql | wc -l` -eq 1 ]
+        then
+            userdel mysql
+            rm -rf /home/mysql
+        fi
+
+        if [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/${MW_DB_VERSION}/bin | wc -l` -eq 1 ]
+        then
+            sed -i "/$MW_DB_VERSION/d" /etc/profile
+            source /etc/profile
+        fi
+
+        rm -rf /tmp/mysql.sock
+        rm -rf /etc/init.d/mysql.service
+        rm -rf /etc/my.cnf
+
+        rm -rf ${INSTALL_PATH}
+        rm -rf /data
+
+        #TODO: 경로에 '/' 포함되어 있어서 처리 필요
+        sed -i "/$MW_DB_VERSION\/bin/d" /etc/profile
+        source /etc/profile
+
+        sed -i "/$MW_DB_VERSION/d" $VERSION
+        
+        local MSG="Uninstallation finished.\
+        \nTerminate menu"
+
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+    fi
 
     Write_Log $FUNCNAME $LINENO "end"
 }
