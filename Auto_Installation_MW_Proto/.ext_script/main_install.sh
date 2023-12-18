@@ -361,7 +361,11 @@ Restart=always \n
 [Install]
 WantedBy=multi-user.target" > /etc/systemd/system/tomcat.service
 
-    if [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/${MW_WAS_VERSION}/bin | wc -l` -eq 0 ]
+    if [ `cat /etc/profile | grep "export PATH=" | wc -l` -eq 1 ]
+    then
+        sed -i '/^export PATH=/s@$@:'$INSTALL_PATH/$MW_WAS_VERSION'/bin@' /etc/profile
+        source /etc/profile
+    elif [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/${MW_WAS_VERSION}/bin | wc -l` -eq 0 ]
     then
         echo -e "export PATH=${PATH}:${INSTALL_PATH}/${MW_WAS_VERSION}/bin" >> /etc/profile
         source /etc/profile
@@ -459,7 +463,11 @@ function Install_Mariadb()
     sed -i '/^User=/s@mysql@maria@' /etc/systemd/system/mariadb.service
     sed -i '/^Group=/s@mysql@maria@' /etc/systemd/system/mariadb.service
 
-    if [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/${MW_DB_VERSION}/bin | wc -l` -eq 0 ]
+    if [ `cat /etc/profile | grep "export PATH=" | wc -l` -eq 1 ]
+    then
+        sed -i '/^export PATH=/s@$@:'$INSTALL_PATH/$MW_DB_VERSION'/bin@' /etc/profile
+        source /etc/profile
+    elif [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/${MW_DB_VERSION}/bin | wc -l` -eq 0 ]
     then
         echo -e "export PATH=${PATH}:${INSTALL_PATH}/${MW_DB_VERSION}/bin" >> /etc/profile
         source /etc/profile
@@ -565,7 +573,11 @@ function Install_Mysql()
     #     source ~/.bash_profile
     # fi
     
-    if [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/${MW_DB_VERSION}/bin | wc -l` -eq 0 ]
+    if [ `cat /etc/profile | grep "export PATH=" | wc -l` -eq 1 ]
+    then
+        sed -i '/^export PATH=/s@$@:'$INSTALL_PATH/$MW_DB_VERSION'/bin@' /etc/profile
+        source /etc/profile
+    elif [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/${MW_DB_VERSION}/bin | wc -l` -eq 0 ]
     then
         echo -e "export DB_HOME=${INSTALL_PATH}/${MW_DB_VERSION}
 export PATH="$PATH:${INSTALL_PATH}/${MW_DB_VERSION}/bin"" >> /etc/profile
@@ -629,7 +641,11 @@ function Install_Postgresql()
     echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
     tar zxf ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}.tar.gz -C ${g_path}/package/3.DB/PostgreSQL
     
-    if [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/bin | wc -l` -eq 0 ]
+    if [ `cat /etc/profile | grep "export PATH=" | wc -l` -eq 1 ]
+    then
+        sed -i '/^export PATH=/s@$@:'$INSTALL_PATH/$MW_DB_VERSION'/bin@' /etc/profile
+        source /etc/profile
+    elif [ `cat /etc/profile | grep "export PATH=" | grep ${INSTALL_PATH}/bin | wc -l` -eq 0 ]
     then
         echo -e "export PATH=${PATH}:${INSTALL_PATH}/${MW_DB_VERSION}/bin" >> /etc/profile
         source /etc/profile
@@ -809,7 +825,7 @@ function Uninstall_Was_Tomcat()
         rm -rf ${INSTALL_PATH}
 
         #확인필요, tomcat path라인 삭제 구문
-        sed -i "/$MW_WAS_VERSION\/bin/d" /etc/profile
+        sed -i '/^export PATH=/s@:'$INSTALL_PATH/$MW_WAS_VERSION/bin'@''@' /etc/profile
         sed -i "/$JAVA_VERSION/d" /etc/profile
         source /etc/profile
 
@@ -844,7 +860,7 @@ function Uninstall_Db_Mariadb()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    if [ ! -f $VERSION ] ||  `cat $VERSION | grep "mariadb" | wc -l` -eq 0 ]
+    if [ ! -f $VERSION ] || [ `cat $VERSION | grep "mariadb" | wc -l` -eq 0 ]
     then
         local MSG="MariaDB is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
@@ -880,7 +896,7 @@ function Uninstall_Db_Mariadb()
         rm -rf /data
 
         #TODO: 경로에 '/' 포함되어 있어서 처리 필요
-        sed -i "/$MW_DB_VERSION\/bin/d" /etc/profile
+        sed -i '/^export PATH=/s@:'$INSTALL_PATH/$MW_DB_VERSION/bin'@''@' /etc/profile
         source /etc/profile
 
         sed -i "/$MW_DB_VERSION/d" $VERSION
@@ -935,7 +951,7 @@ function Uninstall_Db_Mysql()
         rm -rf /data
 
         #TODO: 경로에 '/' 포함되어 있어서 처리 필요
-        sed -i "/$MW_DB_VERSION\/bin/d" /etc/profile
+        sed -i '/^export PATH=/s@:'$INSTALL_PATH/$MW_DB_VERSION/bin'@''@' /etc/profile
         source /etc/profile
 
         sed -i "/$MW_DB_VERSION/d" $VERSION
@@ -979,13 +995,12 @@ function Uninstall_Db_Postgresql()
         rm -rf /data
 
         #TODO: 경로에 '/' 포함되어 있어서 처리 필요
-        sed -i "/$MW_DB_VERSION\/bin/d" /etc/profile
+        sed -i '/^export PATH=/s@:'$INSTALL_PATH/$MW_DB_VERSION/bin'@''@' /etc/profile
         source /etc/profile
 
         sed -i "/$MW_DB_VERSION/d" $VERSION
 
         userdel postgres
-        
     fi
 
     Write_Log $FUNCNAME $LINENO "end"
