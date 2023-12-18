@@ -201,6 +201,7 @@ function Install_Apache()
 
     cd ${g_path}/package/1.WEB/${MW_WEB_VERSION}
 
+    # 버전에 따라 configure 하는 명령어가 다름
     major=$(echo ${MW_WEB_VERSION} | cut -d'-' -f2  | cut -d'.' -f1)
     minor=$(echo ${MW_WEB_VERSION} | cut -d'-' -f2  | cut -d'.' -f2)
     patch=$(echo ${MW_WEB_VERSION} | cut -d'-' -f2  | cut -d'.' -f3)
@@ -708,7 +709,7 @@ function Uninstall_Web_Apache()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    if [ `cat /tmp/.version.out | grep "httpd" | wc -l` -eq 0 ]
+    if [ ! -f $VERSION ] || [ `cat $VERSION | grep "httpd" | wc -l` -eq 0 ]
     then
         local MSG="Apache is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
@@ -780,7 +781,7 @@ function Uninstall_Was_Tomcat()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    if [ `cat /tmp/.version.out | grep "tomcat" | wc -l` -eq 0 ]
+    if [ ! -f $VERSION ] || [ `cat $VERSION | grep "tomcat" | wc -l` -eq 0 ]
     then
         local MSG="Tomcat is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
@@ -843,7 +844,7 @@ function Uninstall_Db_Mariadb()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    if [ `cat /tmp/.version.out | grep "mariadb" | wc -l` -eq 0 ]
+    if [ ! -f $VERSION ] ||  `cat $VERSION | grep "mariadb" | wc -l` -eq 0 ]
     then
         local MSG="MariaDB is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
@@ -893,7 +894,7 @@ function Uninstall_Db_Mysql()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    if [ `cat /tmp/.version.out | grep "mysql" | wc -l` -eq 0 ]
+    if [ ! -f $VERSION ] || [ `cat $VERSION | grep "mysql" | wc -l` -eq 0 ]
     then
         local MSG="MySQL is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
@@ -948,7 +949,7 @@ function Uninstall_Db_Postgresql()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    if [ `cat /tmp/.version.out | grep "postgresql" | wc -l` -eq 0 ]
+    if [ ! -f $VERSION ] || [ `cat $VERSION | grep "postgresql" | wc -l` -eq 0 ]
     then
         local MSG="PostgreSQL is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70

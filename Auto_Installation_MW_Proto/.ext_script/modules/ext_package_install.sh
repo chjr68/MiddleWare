@@ -222,7 +222,7 @@ function Install_Rpms()
             java) 
                 if [ -z "`rpm -qa java-11-openjdk`" ]
                 then            
-                    yum -y install java-1.8.0-openjdk-devel.x86_64
+                    yum -y install java-1.8.0-openjdk-devel.x86_64 >> $RPM_LOG 2>&1
                 fi
                 ;;      
             libaio) 

@@ -56,7 +56,7 @@ function Show_Apache_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    if [ `cat $VERSION | grep "httpd" | wc -l` -eq 0 ]
+    if [ ! -f $VERSION ] || [ `cat $VERSION | grep "httpd" | wc -l` -eq 0 ]
     then
         local MSG="Apache is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
@@ -94,7 +94,7 @@ function Show_Tomcat_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
     
-    if [ `cat $VERSION | grep "tomcat" | wc -l` -eq 0 ]
+    if [ ! -f $VERSION ] || [ `cat $VERSION | grep "tomcat" | wc -l` -eq 0 ]
     then
         local MSG="Tomcat is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
@@ -137,7 +137,7 @@ function Show_Mariadb_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
     
-    if [ `cat $VERSION | grep -E "maria" | wc -l` -eq 0 ]
+    if [ ! -f $VERSION ] || [ `cat $VERSION | grep -E "maria" | wc -l` -eq 0 ]
     then
         local MSG="MariaDB is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
@@ -161,7 +161,7 @@ function Show_Mysql_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
     
-    if [ `cat $VERSION | grep -E "mysql" | wc -l` -eq 0 ]
+    if [ ! -f $VERSION ] || [ `cat $VERSION | grep -E "mysql" | wc -l` -eq 0 ]
     then
         local MSG="MySQL is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
@@ -185,7 +185,7 @@ function Show_Postgresql_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
     
-    if [ `cat $VERSION | grep -E "postgresql" | wc -l` -eq 0 ]
+    if [ ! -f $VERSION ] || [ `cat $VERSION | grep -E "postgresql" | wc -l` -eq 0 ]
     then
         local MSG="PostgreSQL is not installed."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
