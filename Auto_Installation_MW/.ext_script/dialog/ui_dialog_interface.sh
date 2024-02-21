@@ -508,3 +508,79 @@ function Input_Middleware_Install_Path()
 
     Write_Log $FUNCNAME $LINENO "end"
 }
+
+# Uninstall
+function Uninstall()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    Show_Middleware_Type_Menu
+
+    case $MENU_OPT_MW_TYPE in
+        1) 
+            Uninstall_Web
+            ;;
+        2) 
+            Uninstall_Was
+            ;;
+        3) 
+            Uninstall_Db
+            ;;   
+    esac
+
+    source /etc/profile
+
+    local MSG="Uninstallation finished.
+    \nTerminate menu"
+
+    dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Uninstall_Web()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    case $MENU_OPT_WEB_TYPE in
+        1) 
+            Uninstall_Web_Apache
+            ;;
+
+    esac
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Uninstall_Was()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    case $MENU_OPT_WAS_TYPE in
+        1) 
+            Uninstall_Was_Tomcat
+            ;;
+
+    esac
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Uninstall_Db()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    case $MENU_OPT_DB_TYPE in
+        1) 
+            Uninstall_Db_Mariadb
+            ;;
+        2)
+            Uninstall_Db_Mysql
+            ;;
+        3)
+            Uninstall_Db_Postgresql
+            ;;
+    esac
+
+    Write_Log $FUNCNAME $LINENO "end"
+}

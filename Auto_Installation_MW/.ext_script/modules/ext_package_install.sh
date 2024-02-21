@@ -20,23 +20,26 @@ function Check_Os_Type
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    if [ -n "`cat /etc/redhat-release | grep CentOS`" ]
-    then            
-        #CentOS
-        OS_TYPE=1
+    if [ -f /etc/redhat-release ]
+    then
+        if [ -n "`cat /etc/redhat-release | grep CentOS`" ]   
+        then        
+            #CentOS
+            OS_TYPE=1
+        elif [ -n "`cat /etc/redhat-release | grep Rocky`" ]
+        then        
+            #RockyOS
+            OS_TYPE=3
+        fi
     elif [ -n "`cat /etc/issue | grep Ubuntu`" ]
     then
         #Ubuntu
         OS_TYPE=2
-    elif [ -f "`cat /etc/redhat-release | grep Rocky`" ]
-    then
-        #RockyOS
-        OS_TYPE=3
     # elif [ -f /etc/ ]
     # then
     #     #Amazon Linux
     #     OS_TYPE=4    
-    fi
+    fi 
     
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -57,7 +60,8 @@ function Delete_Rpms_Directory()
     Write_Log $FUNCNAME $LINENO "start"
     
     # rpms.tar.gz 해제 파일 삭제
-    rm -rf ${g_path}/rpms
+    # 테스트 완료 전 까지 주석처리
+    #rm -rf ${g_path}/rpms
 
     #WEB module 압축 해제 디렉토리 삭제
     ls -l ${g_path}/package/module | grep ^d | awk '{print $NF}' | xargs rm -rf
@@ -86,7 +90,7 @@ function Install_Rpms()
     if [ $OS_TYPE == 2 ]
     #Ubunt일 경우
     then
-        :
+        CHKRPMLIST+=" libpcre"
     elif [ OS_TYPE == 3 ]
     #RockyOS일 경우
     then
@@ -143,7 +147,7 @@ function Install_Rpms()
                 then
                     if [ -z "`dpkg -l | cut -d" " -f3 | grep dialog`" ]
                     then
-                        dpkg -i ${g_path}/rpms/deb/core-debs/dialog_1.2-5.20130523_amd64.deb >> $RPM_LOG 2>&1
+                        dpkg -i ${g_path}/rpms/deb/core-debs/dialog_1.3-20211214-1_amd64.deb >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -159,9 +163,9 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep sshpass`" ]
                     then
-                        dpkg -i ${g_path}/rpms/deb/core-debs/sshpass_1.06-3_amd64.deb >> $RPM_LOG 2>&1
+                        :
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -177,9 +181,9 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep gdb`" ]
                     then
-                        dpkg -i ${g_path}/rpms/deb/core-debs/gdb_7.6.1-111_amd64.deb >> $RPM_LOG 2>&1
+                        :
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -195,7 +199,7 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep wget`" ]
                     then
                         dpkg -i ${g_path}/rpms/deb/core-debs/wget_1.14-16_amd64.deb >> $RPM_LOG 2>&1
                     fi
@@ -213,7 +217,7 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep lsof`" ]
                     then
                         dpkg -i ${g_path}/rpms/deb/core-debs/lsof_4.87-5_amd64.deb >> $RPM_LOG 2>&1
                     fi
@@ -222,7 +226,7 @@ function Install_Rpms()
                     :
                 fi
                 ;;
-                        tcpdump)
+                tcpdump)
                 if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
                 then
                     if [ -z "`rpm -qa tcpdump`" ]
@@ -253,7 +257,7 @@ function Install_Rpms()
                 then
                     if [ -z "`dpkg -l | cut -d" " -f3 | grep ntpdate`" ]
                     then
-                        dpkg -i ${g_path}/rpms/deb/ntp/ntpdate_4.2.6p5-29_amd64.deb --nodeps >> $RPM_LOG 2>&1
+                        :
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -289,11 +293,9 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep ntp`" ]
                     then
-                        dpkg -i ${g_path}/rpms/deb/ntp/ntpdate_4.2.6p5-29_amd64.deb --nodeps >> $RPM_LOG 2>&1
-                        dpkg -i ${g_path}/rpms/deb/ntp/autogen-libopts_5.18-6_amd64.deb >> $RPM_LOG 2>&1
-                        dpkg -i ${g_path}/rpms/deb/ntp/ntpdate_4.2.6p5-29_amd64.deb >> $RPM_LOG 2>&1
+                        :
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -312,9 +314,9 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep make`" ]
                     then
-                    :
+                        dpkg -i ${g_path}/rpms/deb/apt/apache/make/make_3.82-25_amd64.deb >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -324,15 +326,15 @@ function Install_Rpms()
             gcc) 
                 if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
                 then
-                    if [ -z "`rpm -qa gcc`" ]
+                    if [ -z "`rpm -qa gcc`" ] || [ -z "`rpm -qa gcc-c++`" ]
                     then            
                         rpm -Uvh ${g_path}/rpms/rpm/yum/apache/gcc/* >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep gcc`" ] || [ -z "`dpkg -l | cut -d" " -f3 | grep gcc-c++`" ]
                     then
-                    :
+                        dpkg -i ${g_path}/rpms/deb/apt/apache/gcc/* >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -348,9 +350,9 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep libpcre`" ]
                     then
-                    :
+                        dpkg -i ${g_path}/rpms/deb/apt/apache/expat/* >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -366,9 +368,9 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep java-1.8.0-openjdk`" ]
                     then
-                    :
+                        dpkg -i ${g_path}/rpms/deb/apt/tomcat/java/* >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -384,9 +386,9 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep libaio`" ]
                     then
-                    :
+                        dpkg -i ${g_path}/rpms/deb/apt/db/libaio_0.3.109-14_amd64.deb >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -402,9 +404,9 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep ncurses`" ]
                     then
-                    :
+                        dpkg -i ${g_path}/rpms/deb/apt/db/ncurses/*.deb >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -420,9 +422,9 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep python3`" ]
                     then
-                    :
+                        dpkg -i ${g_path}/rpms/deb/apt/db/python/*.deb >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -439,9 +441,9 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep readline-devel`" ]
                     then
-                    :
+                        dpkg -i ${g_path}/rpms/deb/apt/db/readline/readline-devel_6.2-12_amd64.deb >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -460,13 +462,22 @@ function Install_Rpms()
                 then
                     if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
                     then
-                    :
+                        dpkg -i ${g_path}/rpms/deb/apt/db/zlib/zlib-devel_1.2.7-22_amd64.deb >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
                     :
                 fi
                 ;;  
+            libpcre)
+                if [ $OS_TYPE == 2 ]
+                then
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep libpcre32`" ]
+                    then
+                        dpkg -i ${g_path}/rpms/deb/apt/apache/libpcre/*.deb >> $RPM_LOG 2>&1
+                    fi
+                fi
+                ;;
             compat-openssl10)
                 #RockyOS일 경우 별도 설치 -> 재 확인 필요
                 if [ -z "`rpm -qa compat-openssl10`" ]
@@ -524,7 +535,12 @@ function Check_Rpms_Dependency()
             echo "NOT INSTALL ( ${rpm_string} )" >> $OUTFILE
             Write_Log $FUNCNAME $LINENO "NOT INSTALL ( ${rpm_string} )"
 
-            #설치한 파일이 없으면, 표준버전은 설치
+            #설치한 파일이 없으면, 표준버전은 설치\
+        elif [ -z "`dpkg -l | cut -d" " -f3 | grep ${rpm_string}`" ]
+        then
+            retval=1
+            echo "NOT INSTALL ( ${rpm_string} )" >> $OUTFILE
+            Write_Log $FUNCNAME $LINENO "NOT INSTALL ( ${rpm_string} )"
         fi
     done
 

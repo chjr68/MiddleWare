@@ -238,7 +238,16 @@ function Set_Apache_Config()
 # config: $INSTALL_PATH/${MW_WEB_VERSION}/conf/httpd.conf
 # pidfile: $INSTALL_PATH/${MW_WEB_VERSION}/logs/httpd.pid
 #" >> /etc/init.d/httpd
-    chkconfig --add httpd
+    
+    if [ $OS_TYPE == 1 ]
+    then
+        chkconfig --add httpd
+    elif [ $OS_TYPE == 2 ]
+    then
+        sed -i '/^#ServerName www.example.com:80$/s@#@@' $INSTALL_PATH/${MW_WEB_VERSION}/conf/httpd.conf
+        sed -i '/^ServerName www.example.com:80$/s@www.example.com:80@localhost@' $INSTALL_PATH/${MW_WEB_VERSION}/conf/httpd.conf
+        update-rc.d httpd defaults
+    fi
 
     #서비스 등록
     echo -e "[Unit]
@@ -262,7 +271,8 @@ WantedBy=multi-user.target" > /etc/systemd/system/httpd.service
 
     #서비스 종료
     #TODO: 서비스없을떄 예외처리
-    if [ `ps -ef | grep httpd | wc -l` -gt 1 ]
+    #grep 필터링 했을 때 grep 프로세스를 제거하고 출력하는 구문 grep -v grep
+    if [ `ps -ef | grep httpd | grep -v grep | wc -l` -eq 0 ]
     then
         ps -ef | grep httpd | awk '{print $2}' | xargs kill -9 > /dev/null 2>&1
     fi
@@ -289,20 +299,9 @@ function Install_Was()
 
     case $MENU_OPT_WAS_TYPE in
         1) 
-            Install_Tomcat_Java
-
             Install_Tomcat
             ;;
     esac
-
-    Write_Log $FUNCNAME $LINENO "end"
-}
-
-function Install_Tomcat_Java()
-{
-    Write_Log $FUNCNAME $LINENO "start"
-
-
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -317,7 +316,13 @@ function Install_Tomcat()
     echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
     tar zxf ${g_path}/package/2.WAS/${MW_WAS_VERSION}.tar.gz -C ${INSTALL_PATH}
 
-    JAVA_VERSION=`rpm -qa | grep -E 'java-[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}-openjdk-[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}'`
+    if [ $OS_TYPE == 1 ]
+    then
+        JAVA_VERSION=`rpm -qa | grep -E 'java-[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}-openjdk-[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}'`
+    elif [ $OS_TYPE == 2 ]
+    then
+        JAVA_VERSION=java-8-openjdk-amd64
+    fi
 
     # 버전별 의존성 문제 발생 시, 예외처리
     # major=$(echo ${MW_WAS_VERSION} | cut -d'-' -f2  | cut -d'.' -f1)
@@ -397,7 +402,6 @@ function Install_Db()
             ;;
 
     esac
-
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -715,48 +719,6 @@ WantedBy=multi-user.target
     Write_Log $FUNCNAME $LINENO "end"
 }
 
-function Uninstall()
-{
-    Write_Log $FUNCNAME $LINENO "start"
-
-    Show_Middleware_Type_Menu
-
-    case $MENU_OPT_MW_TYPE in
-        1) 
-            Uninstall_Web
-            ;;
-        2) 
-            Uninstall_Was
-            ;;
-        3) 
-            Uninstall_Db
-            ;;   
-    esac
-
-    source /etc/profile
-
-    local MSG="Uninstallation finished.
-    \nTerminate menu"
-
-    dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
-
-    Write_Log $FUNCNAME $LINENO "end"
-}
-
-function Uninstall_Web()
-{
-    Write_Log $FUNCNAME $LINENO "start"
-
-    case $MENU_OPT_WEB_TYPE in
-        1) 
-            Uninstall_Web_Apache
-            ;;
-
-    esac
-
-    Write_Log $FUNCNAME $LINENO "end"
-}
-
 function Uninstall_Web_Apache()
 {
     Write_Log $FUNCNAME $LINENO "start"
@@ -815,20 +777,6 @@ function Uninstall_Web_Apache()
     Write_Log $FUNCNAME $LINENO "end"
 }
 
-function Uninstall_Was()
-{
-    Write_Log $FUNCNAME $LINENO "start"
-
-    case $MENU_OPT_WAS_TYPE in
-        1) 
-            Uninstall_Was_Tomcat
-            ;;
-
-    esac
-
-    Write_Log $FUNCNAME $LINENO "end"
-}
-
 function Uninstall_Was_Tomcat()
 {
     Write_Log $FUNCNAME $LINENO "start"
@@ -841,7 +789,7 @@ function Uninstall_Was_Tomcat()
         Show_Menu
     else
         local jump=50
-        MW_WAS_VERSION=`cat $VERSION | grep "tomcat" | cut -f 1 -d' '`
+        MW_WAS_VERSION=`cat $VERSION | grep "tomcat" | cut -f 1 -d ' '`
         JAVA_VERSION=`cat $VERSION | grep "java" | cut -f 1 -d ' '`
 
         INSTALL_PATH=`cat $VERSION | grep $MW_WAS_VERSION | cut -f 2 -d ' '`
@@ -870,25 +818,6 @@ function Uninstall_Was_Tomcat()
         source /etc/profile
     fi
     
-    Write_Log $FUNCNAME $LINENO "end"
-}
-
-function Uninstall_Db()
-{
-    Write_Log $FUNCNAME $LINENO "start"
-
-    case $MENU_OPT_DB_TYPE in
-        1) 
-            Uninstall_Db_Mariadb
-            ;;
-        2)
-            Uninstall_Db_Mysql
-            ;;
-        3)
-            Uninstall_Db_Postgresql
-            ;;
-    esac
-
     Write_Log $FUNCNAME $LINENO "end"
 }
 
