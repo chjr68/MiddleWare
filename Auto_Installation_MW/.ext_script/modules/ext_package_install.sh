@@ -64,7 +64,12 @@ function Delete_Rpms_Directory()
     #rm -rf ${g_path}/rpms
 
     #WEB module 압축 해제 디렉토리 삭제
-    ls -l ${g_path}/package/module | grep ^d | awk '{print $NF}' | xargs rm -rf
+    ls -l ${g_path}/package/module/ | grep ^d | awk '{print $NF}' | xargs rm -rf
+    ls -l ${g_path}/package/1.WEB/ | grep ^d | awk '{print $NF}' | xargs rm -rf
+    ls -l ${g_path}/package/2.WAS/ | grep ^d | awk '{print $NF}' | xargs rm -rf
+    ls -l ${g_path}/package/3.DB/MariaDB/ | grep ^d | awk '{print $NF}' | xargs rm -rf
+    ls -l ${g_path}/package/3.DB/MySQL/ | grep ^d | awk '{print $NF}' | xargs rm -rf
+    ls -l ${g_path}/package/3.DB/PostgreSQL/ | grep ^d | awk '{print $NF}' | xargs rm -rf
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -90,7 +95,7 @@ function Install_Rpms()
     if [ $OS_TYPE == 2 ]
     #Ubunt일 경우
     then
-        CHKRPMLIST+=" libpcre"
+        :
     elif [ OS_TYPE == 3 ]
     #RockyOS일 경우
     then
@@ -328,13 +333,13 @@ function Install_Rpms()
                 then
                     if [ -z "`rpm -qa gcc`" ] || [ -z "`rpm -qa gcc-c++`" ]
                     then            
-                        rpm -Uvh ${g_path}/rpms/rpm/yum/apache/gcc/* >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/rpm/yum/apache/gcc/*.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep gcc`" ] || [ -z "`dpkg -l | cut -d" " -f3 | grep gcc-c++`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep gcc`" ] || [ -z "`dpkg -l | cut -d" " -f3 | grep g++`" ]
                     then
-                        dpkg -i ${g_path}/rpms/deb/apt/apache/gcc/* >> $RPM_LOG 2>&1
+                        dpkg -i ${g_path}/rpms/deb/apt/apache/gcc/*.deb >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -346,13 +351,13 @@ function Install_Rpms()
                 then
                     if [ -z "`rpm -qa expat`" ]
                     then            
-                        rpm -Uvh ${g_path}/rpms/rpm/yum/apache/expat/* >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/rpm/yum/apache/expat/*.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep libpcre`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep libpcre32`" ]
                     then
-                        dpkg -i ${g_path}/rpms/deb/apt/apache/expat/* >> $RPM_LOG 2>&1
+                        dpkg -i ${g_path}/rpms/deb/apt/apache/expat/*.deb >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -364,13 +369,13 @@ function Install_Rpms()
                 then
                     if [ -z "`rpm -qa java-1.8.0-openjdk`" ]
                     then            
-                        rpm -Uvh ${g_path}/rpms/rpm/yum/tomcat/java/* >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/rpm/yum/tomcat/java/*.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
                     if [ -z "`dpkg -l | cut -d" " -f3 | grep java-1.8.0-openjdk`" ]
                     then
-                        dpkg -i ${g_path}/rpms/deb/apt/tomcat/java/* >> $RPM_LOG 2>&1
+                        dpkg -i ${g_path}/rpms/deb/apt/tomcat/java/*.deb >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -469,15 +474,24 @@ function Install_Rpms()
                     :
                 fi
                 ;;  
-            libpcre)
-                if [ $OS_TYPE == 2 ]
-                then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep libpcre32`" ]
-                    then
-                        dpkg -i ${g_path}/rpms/deb/apt/apache/libpcre/*.deb >> $RPM_LOG 2>&1
-                    fi
-                fi
-                ;;
+            # libpcre)
+            #     if [ $OS_TYPE == 2 ]
+            #     then
+            #         if [ -z "`dpkg -l | cut -d" " -f3 | grep libpcre32`" ]
+            #         then
+            #             dpkg -i ${g_path}/rpms/deb/apt/apache/libpcre/*.deb >> $RPM_LOG 2>&1
+            #         fi
+            #     fi
+            #     ;;
+            # libc)
+            #     if [ $OS_TYPE == 2 ]
+            #     then
+            #         if [ -z "`dpkg -l | cut -d" " -f3 | grep libc6-dev`" ]
+            #         then
+            #             dpkg -i ${g_path}/rpms/deb/apt/apache/libc/*.deb >> $RPM_LOG 2>&1
+            #         fi
+            #     fi
+            #     ;;
             compat-openssl10)
                 #RockyOS일 경우 별도 설치 -> 재 확인 필요
                 if [ -z "`rpm -qa compat-openssl10`" ]
@@ -529,19 +543,24 @@ function Check_Rpms_Dependency()
 
         echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
 
-        if [ -z "`rpm -qa ${rpm_string}`" ]
+        #설치한 파일이 없으면, 표준버전은 설치\
+        if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
         then
-            retval=1
-            echo "NOT INSTALL ( ${rpm_string} )" >> $OUTFILE
-            Write_Log $FUNCNAME $LINENO "NOT INSTALL ( ${rpm_string} )"
-
-            #설치한 파일이 없으면, 표준버전은 설치\
-        elif [ -z "`dpkg -l | cut -d" " -f3 | grep ${rpm_string}`" ]
-        then
-            retval=1
-            echo "NOT INSTALL ( ${rpm_string} )" >> $OUTFILE
-            Write_Log $FUNCNAME $LINENO "NOT INSTALL ( ${rpm_string} )"
-        fi
+            if [ -z "`rpm -qa ${rpm_string}`" ]
+            then
+                retval=1
+                echo "NOT INSTALL ( ${rpm_string} )" >> $OUTFILE
+                Write_Log $FUNCNAME $LINENO "NOT INSTALL ( ${rpm_string} )"
+            fi
+        elif [ $OS_TYPE == 2 ]
+        then        
+            if [ -z "`dpkg -l | cut -d" " -f3 | grep ${rpm_string}`" ]
+            then
+                retval=1
+                echo "NOT INSTALL ( ${rpm_string} )" >> $OUTFILE
+                Write_Log $FUNCNAME $LINENO "NOT INSTALL ( ${rpm_string} )"
+            fi
+        fi    
     done
 
     if [ $Progress -ne 100 ]

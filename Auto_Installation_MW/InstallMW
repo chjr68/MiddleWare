@@ -63,13 +63,25 @@ function main()
     #OS 타입 체크
     Check_Os_Type
 
+    if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
+    then
+        if [ -z "`rpm -qa dialog`"  ]
+        then
+            rpm -Uvh ${g_path}/rpms/rpm/core-rpms/dialog-1.2-4.20130523.el7.x86_64.rpm >> $RPM_LOG 2>&1
+        fi
+    elif [ $OS_TYPE == 2 ]
+    then
+        if [ -z "`dpkg -l | cut -d" " -f3 | grep dialog`" ]
+        then
+            dpkg -i ${g_path}/rpms/deb/core-debs/dialog_1.3-20211214-1_amd64.deb >> $RPM_LOG 2>&1
+        fi
+    fi
+
     #rpms 설치 유무 확인 및 설치
     Check_Rpms_Dependency
 
     #실제 설치 수행
     Show_Menu
-
-    source /etc/profile
 
     #압축 해제 디렉토리 삭제
     Delete_Rpms_Directory
