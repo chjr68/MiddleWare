@@ -49,7 +49,7 @@ function Decompress_Rpms()
     Write_Log $FUNCNAME $LINENO "start"
 
     # rpms.tar.gz 압축파일 해제
-    tar zxf ${g_path}/rpms.tar.gz -C ${g_path}/
+    #tar zxf ${g_path}/rpms.tar.gz -C ${g_path}/
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -88,18 +88,20 @@ function Install_Rpms()
         local jump=$((1000/`echo ${CHKRPMLIST} | wc -w`))
     fi
 
-    # 해당 시스템의 공개키가 누락되었을 경우 발생되는 경고 메시지가 출력 되지 않도록 key 파일 import 수행
-    rpm --import /etc/pki/rpm-gpg/RPM* >> $RPM_LOG 2>&1
-
     #OS별 추가 필수모듈이 있을경우
-    if [ $OS_TYPE == 2 ]
-    #Ubunt일 경우
+    if [ $OS_TYPE == 1 ]
+    #CentOS일 경우
     then
-        :
+        # 해당 시스템의 공개키가 누락되었을 경우 발생되는 경고 메시지가 출력 되지 않도록 key 파일 import 수행
+        rpm --import /etc/pki/rpm-gpg/RPM* >> $RPM_LOG 2>&1
+    elif [ OS_TYPE == 2 ]
+    #Ubuntu일 경우
+    then
+        CHKRPMLIST+=" compat-openssl10"
     elif [ OS_TYPE == 3 ]
     #RockyOS일 경우
     then
-        CHKRPMLIST+=" compat-openssl10"
+        :
     elif [ OS_TYPE == 4 ]
     #Amazon Linux일 경우
     then
@@ -409,7 +411,7 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep ncurses`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep libncurses5`" ]
                     then
                         dpkg -i ${g_path}/rpms/deb/apt/db/ncurses/*.deb >> $RPM_LOG 2>&1
                     fi
@@ -423,7 +425,7 @@ function Install_Rpms()
                 then
                     if [ -z "`rpm -qa python3`" ]
                     then            
-                        rpm -Uvh ${g_path}/rpms/rpm/yum/db/python/* >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/rpm/yum/db/python/*.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
@@ -441,14 +443,13 @@ function Install_Rpms()
                 then
                     if [ -z "`rpm -qa readline-devel`" ]
                     then            
-                        rpm -Uvh ${g_path}/rpms/rpm/yum/db/readline/readline-6.2-11.el7.i686.rpm >> $RPM_LOG 2>&1
-                        rpm -Uvh ${g_path}/rpms/rpm/yum/db/readline/readline-devel-6.2-11.el7.x86_64.rpm >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/rpm/yum/db/readline/*.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep readline-devel`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep libreadline`" ]
                     then
-                        dpkg -i ${g_path}/rpms/deb/apt/db/readline/readline-devel_6.2-12_amd64.deb >> $RPM_LOG 2>&1
+                        dpkg -i ${g_path}/rpms/deb/apt/db/libreadline/*.deb >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then

@@ -85,6 +85,8 @@ function main()
 
     #압축 해제 디렉토리 삭제
     Delete_Rpms_Directory
+
+    source /etc/profile
     
     Write_Log $FUNCNAME $LINENO "end"
 }

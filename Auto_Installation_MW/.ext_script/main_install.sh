@@ -527,9 +527,30 @@ log-bin                         = /data/mariadb/log-bin/mysql-bin" > /etc/my.cnf
     
     #심볼릭링크 (mariadb 실행파일에 /usr/local/mysql 경로가 하드코딩 되어있어서 추가 필요)
     ln -s ${INSTALL_PATH}/${MW_DB_VERSION} /usr/local/mysql
+    
+    if [ $OS_TYPE == 2 ]
+    then
+        #libncurses
+        if [ -z "`find /usr/lib -name libncurses.so.5`" ]
+        then            
+            ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6.3 /usr/lib/x86_64-linux-gnu/libncurses.so.5
+        fi
+        #libtinfo
+        if [ -z "`find /usr/lib -name libtinfo.so.5`" ]
+        then
+            ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6.3 /usr/lib/x86_64-linux-gnu/libtinfo.so.5   
+        fi
+        #libsystemd-daemon
+        if [ -z "`find /usr/lib -name libsystemd-daemon.so.0`" ]
+        then
+            dpkg -i ${g_path}/rpms/deb/apt/db/libsystemd-daemon/systemd-libs_219-79_amd64.deb >> $RPM_LOG 2>&1
+            ln -s /usr/lib64/libsystemd-daemon.so.0 /usr/lib/x86_64-linux-gnu/libsystemd-daemon.so.0    
+        fi
 
+    fi
 
     #TODO: 서비스 systemctl start mysql로 됨 (서비스명 변경 완료)
+    systemctl daemon-reload
     systemctl enable mariadb > /dev/null 2>&1
     systemctl start mariadb
 
@@ -632,6 +653,37 @@ pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
     dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
     Write_Log $FUNCNAME $LINENO "end"
+
+    if [ $OS_TYPE == 1 ]
+    then
+        chkconfig --add mysql.service
+    elif [ $OS_TYPE == 2 ]
+    then
+        #libssl & libcrypto
+        if [ -z "`find /usr/lib -name libssl.so.10`" ] || [ -z "`find /usr/lib -name libcrypto.so.10`" ]
+        then  
+        dpkg -i /working/rpms/deb/apt/db/openssl/openssl-libs_1.0.2k-27_amd64.deb >> $RPM_LOG 2>&1
+
+        ln -s /usr/lib64/libssl.so.10 /usr/lib/x86_64-linux-gnu/libssl.so.10
+        ln -s /usr/lib64/libcrypto.so.10 /usr/lib/x86_64-linux-gnu/libcrypto.so.10
+        fi
+        update-rc.d mysql defaults
+    fi
+
+    systemctl enable mysql.service > /dev/null 2>&1
+    systemctl start mysql.service
+
+    echo $MW_DB_VERSION $INSTALL_PATH >> $VERSION
+
+    # #mysql root password 변경, /data/mysql/.passwd 파일 읽어서 초기 패스워드 사용해야 됨
+    # mysql -uroot -p'초기패스워드' -e "alter user 'root'@'localhost' identified by 'Sniper13@$';"
+
+    local MSG="Please Remember Initial Password Path\
+    \n/data/mysql/.passwd"
+
+    dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+    Write_Log $FUNCNAME $LINENO "end"
 }
 
 #TODO: Postgresql 설치방법 가이드북 작성 및 코드 작성
@@ -670,6 +722,7 @@ function Install_Postgresql()
     make install > /dev/null 2>&1
 
     mkdir -p /data/postgresql
+    PGDATA="/data/postgresql"
     chown -R postgres:postgres /data/
 
     chown -R postgres:postgres ${INSTALL_PATH}/$MW_DB_VERSION
@@ -678,7 +731,7 @@ function Install_Postgresql()
 
     #서비스등록 및 시작
     echo -e "[Unit]
-Description=PostgreSQL 9.6.19
+Description=PostgreSQL
 After=syslog.target
 After=network.target \n
 [Service]
@@ -689,22 +742,21 @@ Group=postgres \n
 # break postgresql-setup. \n
 # Location of database directory
 Environment=PGDATA=/data/postgresql
-Environment=POSTGRES_HOME=$INSTALL_PATH/$MW_WAS_VERSION \n
+Environment=POSTGRES_HOME=$INSTALL_PATH/$MW_DB_VERSION \n
 # Where to send early-startup messages from the server (before the logging
 # options of postgresql.conf take effect)
 # This is normally controlled by the global default set by systemd
 # StandardOutput=syslog \n
 # Disable OOM kill on the postmaster
 OOMScoreAdjust=-1000 \n
-ExecStart=$INSTALL_PATH/$MW_WAS_VERSION/bin/pg_ctl start -D "${PGDATA}" -s -w -t 300
-ExecStop=$INSTALL_PATH/$MW_WAS_VERSION/bin/pg_ctl stop -D "${PGDATA}" -s -m fast
-ExecReload=$INSTALL_PATH/$MW_WAS_VERSION/bin/pg_ctl reload -D "${PGDATA}" -s
+ExecStart=$INSTALL_PATH/$MW_DB_VERSION/bin/pg_ctl start -D "${PGDATA}" -s -w -t 300
+ExecStop=$INSTALL_PATH/$MW_DB_VERSION/bin/pg_ctl stop -D "${PGDATA}" -s -m fast
+ExecReload=$INSTALL_PATH/$MW_DB_VERSION/bin/pg_ctl reload -D "${PGDATA}" -s
  \n
 # Give a reasonable amount of time for the server to start up/shut down
 TimeoutSec=300 \n
 [Install]
-WantedBy=multi-user.target
-" > /etc/systemd/system/postgres.service
+WantedBy=multi-user.target" > /etc/systemd/system/postgres.service
 
     systemctl daemon-reload
     systemctl enable postgres > /dev/null 2>&1
