@@ -624,54 +624,54 @@ log-error=$INSTALL_PATH/$MW_DB_VERSION/log/mysql.log
 pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
 " > /etc/my.cnf
 
-    #db 설치
-    cd ${INSTALL_PATH}/${MW_DB_VERSION}/bin
-    ./mysqld --initialize --user=mysql > /data/mysql/.passwd 2>&1
-    ./mysql_ssl_rsa_setup --defaults-file=/etc/my.cnf > /dev/null 2>&1
-    #./mysqld_safe --user=mysql 이거 치면 왜 쉘 멈추냐?
-
-    #심볼릭링크 (mariadb 실행파일에 /usr/local/mysql 경로가 하드코딩되어있어서 추가 필요)
-    ln -s /data/mysql/mysql.sock /tmp/mysql.sock
-
-    #서비스등록 및 시작
-    \cp -f $INSTALL_PATH/$MW_DB_VERSION/support-files/mysql.server /etc/init.d/mysql.service
-    sed -i '/^basedir=$/s@=@='$INSTALL_PATH/$MW_DB_VERSION'@' /etc/init.d/mysql.service
-    sed -i '/^datadir=$/s@=@=/data/mysql@' /etc/init.d/mysql.service
-
-    chkconfig --add mysql.service
-    systemctl enable mysql.service > /dev/null 2>&1
-    systemctl start mysql.service
-
-    echo $MW_DB_VERSION $INSTALL_PATH >> $VERSION
-
-    # #mysql root password 변경, /data/mysql/.passwd 파일 읽어서 초기 패스워드 사용해야 됨
-    # mysql -uroot -p'초기패스워드' -e "alter user 'root'@'localhost' identified by 'Sniper13@$';"
-
-    local MSG="Please Remember Initial Password Route\
-    \n/data/mysql/.passwd"
-
-    dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
-
-    Write_Log $FUNCNAME $LINENO "end"
-
-    if [ $OS_TYPE == 1 ]
-    then
-        chkconfig --add mysql.service
-    elif [ $OS_TYPE == 2 ]
+    #라이브러리 경로 설정
+    if [ $OS_TYPE == 2 ]
     then
         #libssl & libcrypto
         if [ -z "`find /usr/lib -name libssl.so.10`" ] || [ -z "`find /usr/lib -name libcrypto.so.10`" ]
         then  
-        dpkg -i /working/rpms/deb/apt/db/openssl/openssl-libs_1.0.2k-27_amd64.deb >> $RPM_LOG 2>&1
+            dpkg -i ${g_path}/rpms/deb/apt/db/openssl/openssl-libs_1.0.2k-27_amd64.deb >> $RPM_LOG 2>&1
 
-        ln -s /usr/lib64/libssl.so.10 /usr/lib/x86_64-linux-gnu/libssl.so.10
-        ln -s /usr/lib64/libcrypto.so.10 /usr/lib/x86_64-linux-gnu/libcrypto.so.10
+            ln -s  /usr/lib64/libssl.so.10 /usr/lib/x86_64-linux-gnu/libssl.so.10
+            ln -s  /usr/lib64/libcrypto.so.10 /usr/lib/x86_64-linux-gnu/libcrypto.so.10
+            ln -s /usr/lib/x86_64-linux-gnu/libssl.so.10 /lib/x86_64-linux-gnu/libssl.so.10
+            ln -s /usr/lib/x86_64-linux-gnu/libcrypto.so.10 /lib/x86_64-linux-gnu/libcrypto.so.10
+        #libncurses
+        elif [ -z "`find /usr/lib -name libncurses.so.5`" ]
+        then            
+            ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6.3 /usr/lib/x86_64-linux-gnu/libncurses.so.5
+        #libtinfo
+        elif [ -z "`find /usr/lib -name libtinfo.so.5`" ]
+        then
+            ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6.3 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
         fi
+    fi
+
+    #db 설치
+    cd ${INSTALL_PATH}/${MW_DB_VERSION}/bin
+    ./mysqld --initialize --user=mysql > /data/mysql/.passwd 2>&1
+    ./mysql_ssl_rsa_setup --defaults-file=/etc/my.cnf > /dev/null 2>&1
+
+    #심볼릭링크 (mysql 실행파일에 /usr/local/mysql 경로가 하드코딩 되어 있어서 추가 필요)
+    ln -s /data/mysql/mysql.sock /tmp/mysql.sock
+
+    #서비스등록 및 시작
+    \cp -f $INSTALL_PATH/$MW_DB_VERSION/support-files/mysql.server /etc/init.d/mysql
+    sed -i '/^basedir=$/s@=@='$INSTALL_PATH/$MW_DB_VERSION'@' /etc/init.d/mysql
+    sed -i '/^datadir=$/s@=@=/data/mysql@' /etc/init.d/mysql
+
+    if [ $OS_TYPE == 1 ]
+    then
+        chkconfig --add mysql
+    elif [ $OS_TYPE == 2 ]
+    then
+        #./mysqld_safe --user=mysql 이거하면 왜 행걸림?
         update-rc.d mysql defaults
     fi
 
-    systemctl enable mysql.service > /dev/null 2>&1
-    systemctl start mysql.service
+    systemctl daemon-reload
+    systemctl enable mysql > /dev/null 2>&1
+    systemctl start mysql
 
     echo $MW_DB_VERSION $INSTALL_PATH >> $VERSION
 
@@ -960,7 +960,7 @@ function Uninstall_Db_Mysql()
         fi
 
         rm -rf /tmp/mysql.sock
-        rm -rf /etc/init.d/mysql.service
+        rm -rf /etc/init.d/mysql
         rm -rf /etc/my.cnf
 
         rm -rf ${INSTALL_PATH}

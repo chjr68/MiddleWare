@@ -407,7 +407,7 @@ function Install_Rpms()
                 then
                     if [ -z "`rpm -qa ncurses`" ]
                     then            
-                        rpm -Uvh ${g_path}/rpms/rpm/yum/db/ncurses/* >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/rpm/yum/db/ncurses/*.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
