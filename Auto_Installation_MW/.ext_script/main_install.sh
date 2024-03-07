@@ -756,7 +756,7 @@ ExecReload=$INSTALL_PATH/$MW_DB_VERSION/bin/pg_ctl reload -D "${PGDATA}" -s
 # Give a reasonable amount of time for the server to start up/shut down
 TimeoutSec=300 \n
 [Install]
-WantedBy=multi-user.target" > /etc/systemd/system/postgres.service
+WantedBy=multi-user.target" > /etc/systemd/system/postgres
 
     systemctl daemon-reload
     systemctl enable postgres > /dev/null 2>&1

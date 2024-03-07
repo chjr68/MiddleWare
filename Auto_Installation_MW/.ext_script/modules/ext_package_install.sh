@@ -97,11 +97,12 @@ function Install_Rpms()
     elif [ OS_TYPE == 2 ]
     #Ubuntu일 경우
     then
-        CHKRPMLIST+=" compat-openssl10"
+        CHKRPMLIST+=" msgfmt"
     elif [ OS_TYPE == 3 ]
     #RockyOS일 경우
     then
-        :
+        CHKRPMLIST+=" compat-openssl10"
+
     elif [ OS_TYPE == 4 ]
     #Amazon Linux일 경우
     then
@@ -233,26 +234,26 @@ function Install_Rpms()
                     :
                 fi
                 ;;
-                tcpdump)
-                if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
+            tcpdump)
+            if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
+            then
+                if [ -z "`rpm -qa tcpdump`" ]
                 then
-                    if [ -z "`rpm -qa tcpdump`" ]
-                    then
-                        rpm -Uvh ${g_path}/rpms/rpm/tcpdump/libpcap-1.5.3-11.el7.x86_64.rpm >> $RPM_LOG 2>&1
-                        rpm -Uvh ${g_path}/rpms/rpm/tcpdump/tcpdump-4.9.2-3.el7.x86_64.rpm >> $RPM_LOG 2>&1
-                    fi
-                elif [ $OS_TYPE == 2 ]
-                then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep tcpdump`" ]
-                    then
-                        dpkg -i ${g_path}/rpms/deb/tcpdump/libpcap_1.5.3-12_amd64.deb >> $RPM_LOG 2>&1
-                        dpkg -i ${g_path}/rpms/deb/tcpdump/tcpdump_4.9.2-4_amd64.deb >> $RPM_LOG 2>&1
-                    fi
-                elif [ $OS_TYPE == 4 ]
-                then
-                    :
+                    rpm -Uvh ${g_path}/rpms/rpm/tcpdump/libpcap-1.5.3-11.el7.x86_64.rpm >> $RPM_LOG 2>&1
+                    rpm -Uvh ${g_path}/rpms/rpm/tcpdump/tcpdump-4.9.2-3.el7.x86_64.rpm >> $RPM_LOG 2>&1
                 fi
-                ;;    
+            elif [ $OS_TYPE == 2 ]
+            then
+                if [ -z "`dpkg -l | cut -d" " -f3 | grep tcpdump`" ]
+                then
+                    dpkg -i ${g_path}/rpms/deb/tcpdump/libpcap_1.5.3-12_amd64.deb >> $RPM_LOG 2>&1
+                    dpkg -i ${g_path}/rpms/deb/tcpdump/tcpdump_4.9.2-4_amd64.deb >> $RPM_LOG 2>&1
+                fi
+            elif [ $OS_TYPE == 4 ]
+            then
+                :
+            fi
+            ;;    
             ntpdate)
                 if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
                 then
@@ -429,7 +430,7 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep python3`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep python3.10-dev`" ]
                     then
                         dpkg -i ${g_path}/rpms/deb/apt/db/python/*.deb >> $RPM_LOG 2>&1
                     fi
@@ -447,7 +448,7 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep libreadline`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep libreadline-dev`" ]
                     then
                         dpkg -i ${g_path}/rpms/deb/apt/db/libreadline/*.deb >> $RPM_LOG 2>&1
                     fi
@@ -466,7 +467,7 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep zlib`" ]
                     then
                         dpkg -i ${g_path}/rpms/deb/apt/db/zlib/zlib-devel_1.2.7-22_amd64.deb >> $RPM_LOG 2>&1
                     fi
@@ -474,30 +475,25 @@ function Install_Rpms()
                 then
                     :
                 fi
-                ;;  
-            # libpcre)
-            #     if [ $OS_TYPE == 2 ]
-            #     then
-            #         if [ -z "`dpkg -l | cut -d" " -f3 | grep libpcre32`" ]
-            #         then
-            #             dpkg -i ${g_path}/rpms/deb/apt/apache/libpcre/*.deb >> $RPM_LOG 2>&1
-            #         fi
-            #     fi
-            #     ;;
-            # libc)
-            #     if [ $OS_TYPE == 2 ]
-            #     then
-            #         if [ -z "`dpkg -l | cut -d" " -f3 | grep libc6-dev`" ]
-            #         then
-            #             dpkg -i ${g_path}/rpms/deb/apt/apache/libc/*.deb >> $RPM_LOG 2>&1
-            #         fi
-            #     fi
-            #     ;;
+                ;;
+            msgfmt)
+                #UbuntuS 일 경우 별도 설치
+                if [ $OS_TYPE == 2 ]
+                then    
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep -w gettext`" ]
+                    then
+                        dpkg -i ${g_path}/rpms/deb/apt/db/msgfmt/*.deb >> $RPM_LOG 2>&1
+                    fi
+                fi
+                ;; 
             compat-openssl10)
                 #RockyOS일 경우 별도 설치 -> 재 확인 필요
-                if [ -z "`rpm -qa compat-openssl10`" ]
-                then
-                    yum -y install compat-openssl10 >> $RPM_LOG 2>&1
+                if [ $OS_TYPE == 3 ]
+                then    
+                    if [ -z "`rpm -qa compat-openssl10`" ]
+                    then
+                        yum -y install compat-openssl10 >> $RPM_LOG 2>&1
+                    fi
                 fi
                 ;;      
         esac
