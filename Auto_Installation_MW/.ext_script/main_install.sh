@@ -18,6 +18,8 @@ g_path=$( cd "$(dirname "$0")" ; pwd )
 
 ################################################ 메뉴 인터페이스
 
+
+
 function Install_Middleware()
 {
     Write_Log $FUNCNAME $LINENO "start"
@@ -220,6 +222,15 @@ function Install_Apache()
         --enable-mods-shared=all > ${g_path}/trace_log/apache.log 2>&1
     fi
 
+    #Rocky expat 에러처리
+    if [ $OS_TYPE == 3 ]
+    then
+        if [ `cat ${g_path}/package/1.WEB/${MW_WEB_VERSION}/build/config_vars.mk | grep "AP_LIBS" | grep expat | wc -l` -eq 0 ]
+        then
+            sed -i '/^AP_LIBS = /s@$@ -lexpat@' ${g_path}/package/1.WEB/${MW_WEB_VERSION}/build/config_vars.mk
+        fi
+    fi
+
     make >> ${g_path}/trace_log/apache.log 2>&1
     make install >> ${g_path}/trace_log/apache.log 2>&1
 
@@ -316,7 +327,7 @@ function Install_Tomcat()
     echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
     tar zxf ${g_path}/package/2.WAS/${MW_WAS_VERSION}.tar.gz -C ${INSTALL_PATH}
 
-    if [ $OS_TYPE == 1 ]
+    if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
     then
         JAVA_VERSION=`rpm -qa | grep -E 'java-[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}-openjdk-[0-9]{1,2}\.[0-9]{1,2}\.[0-9]{1,2}'`
     elif [ $OS_TYPE == 2 ]
@@ -632,8 +643,8 @@ pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
         then  
             dpkg -i ${g_path}/rpms/deb/apt/db/openssl/openssl-libs_1.0.2k-27_amd64.deb >> $RPM_LOG 2>&1
 
-            ln -s  /usr/lib64/libssl.so.10 /usr/lib/x86_64-linux-gnu/libssl.so.10
-            ln -s  /usr/lib64/libcrypto.so.10 /usr/lib/x86_64-linux-gnu/libcrypto.so.10
+            ln -s /usr/lib64/libssl.so.10 /usr/lib/x86_64-linux-gnu/libssl.so.10
+            ln -s /usr/lib64/libcrypto.so.10 /usr/lib/x86_64-linux-gnu/libcrypto.so.10
             ln -s /usr/lib/x86_64-linux-gnu/libssl.so.10 /lib/x86_64-linux-gnu/libssl.so.10
             ln -s /usr/lib/x86_64-linux-gnu/libcrypto.so.10 /lib/x86_64-linux-gnu/libcrypto.so.10
         #libncurses
@@ -1001,6 +1012,16 @@ function Uninstall_Db_Postgresql()
             kill `cat /data/postgresql/postmaster.pid | head -1` | echo -ne '\n' > /dev/null 2>&1
         fi
 
+        if [ `systemctl is-active postgres` == "active" ]
+        then
+            systemctl stop postgres
+        fi
+
+        if [ `cat /etc/group | grep postgres | wc -l` -eq 1 ]
+        then
+            userdel postgres
+        fi
+
         cd ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}
         make distclean > /dev/null 2>&1
         cd ${g_path}
@@ -1008,6 +1029,7 @@ function Uninstall_Db_Postgresql()
         rm -rf ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}
         rm -rf ${INSTALL_PATH}
         rm -rf /data
+        rm -rf /etc/systemd/system/postgres
 
         #TODO: 경로에 '/' 포함되어 있어서 처리 필요
         sed -i '/^export PATH=/s@:'$INSTALL_PATH/$MW_DB_VERSION/bin'@''@' /etc/profile
