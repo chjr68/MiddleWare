@@ -557,7 +557,25 @@ log-bin                         = /data/mariadb/log-bin/mysql-bin" > /etc/my.cnf
             dpkg -i ${g_path}/rpms/deb/apt/db/libsystemd-daemon/systemd-libs_219-79_amd64.deb >> $RPM_LOG 2>&1
             ln -s /usr/lib64/libsystemd-daemon.so.0 /usr/lib/x86_64-linux-gnu/libsystemd-daemon.so.0    
         fi
+    fi
 
+    if [ $OS_TYPE == 3 ]
+    then
+        #libncurses
+        if [ -z "`find /usr/lib64 -name libncurses.so.5`" ]
+        then            
+            ln -s /usr/lib64/libncurses.so.6.1 /usr/lib64/libncurses.so.5
+        fi
+        #libtinfo
+        if [ -z "`find /usr/lib64 -name libtinfo.so.5`" ]
+        then
+            ln -s /usr/lib64/libtinfo.so.6.1 /usr/lib64/libtinfo.so.5
+        fi
+        #libsystemd-daemon
+        if [ -z "`find /usr/lib64 -name libsystemd-daemon.so.0`" ]
+        then
+            cp ${g_path}/rpms/rocky/dnf/db/libsystemd-daemon /usr/lib64/.
+        fi
     fi
 
     #TODO: 서비스 systemctl start mysql로 됨 (서비스명 변경 완료)

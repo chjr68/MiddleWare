@@ -159,7 +159,7 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 3 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep dialog`" ]
+                    if [ -z "`rpm -qa dialog`" ]
                     then
                         rpm -Uvh ${g_path}/rpms/rocky/core-rpms/dialog-1.3-13.20171209.el8.x86_64.rpm >> $RPM_LOG 2>&1
                     fi
@@ -205,7 +205,7 @@ function Install_Rpms()
                 fi
                 ;;
             wget)
-                if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
+                if [ $OS_TYPE == 1 ]
                 then
                     if [ -z "`rpm -qa wget`" ]
                     then
@@ -216,6 +216,13 @@ function Install_Rpms()
                     if [ -z "`dpkg -l | cut -d" " -f3 | grep wget`" ]
                     then
                         dpkg -i ${g_path}/rpms/ubuntu/core-debs/wget_1.14-16_amd64.deb >> $RPM_LOG 2>&1
+                    fi
+                elif [ $OS_TYPE == 3 ]
+                then
+                    if [ -z "`rpm -qa wget`" ]
+                    then
+                        rpm -Uvh ${g_path}/rpms/rocky/core-rpms/wget-1.19.5-11.el8.x86_64.rpm >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/rocky/core-rpms/libmetalink-0.1.3-7.el8.x86_64.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
