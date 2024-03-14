@@ -574,7 +574,7 @@ log-bin                         = /data/mariadb/log-bin/mysql-bin" > /etc/my.cnf
         #libsystemd-daemon
         if [ -z "`find /usr/lib64 -name libsystemd-daemon.so.0`" ]
         then
-            cp ${g_path}/rpms/rocky/dnf/db/libsystemd-daemon /usr/lib64/.
+            cp ${g_path}/rpms/rocky/dnf/db/libsystemd-daemon/libsystemd-daemon.so.0 /usr/lib64/.
         fi
     fi
 
@@ -673,6 +673,20 @@ pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
         elif [ -z "`find /usr/lib -name libtinfo.so.5`" ]
         then
             ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6.3 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
+        fi
+    fi
+
+    if [ $OS_TYPE == 3 ]
+    then
+        #libssl
+        if [ -z "`find /usr/lib64 -name libssl.so.10`" ]
+        then            
+            cp ${g_path}/rpms/rocky/dnf/db/libssl/libssl.so.10 /lib64/.
+        fi
+        #libcrypto
+        if [ -z "`find /usr/lib64 -name libcrypto.so.10`" ]
+        then
+            cp ${g_path}/rpms/rocky/dnf/db/licrypto/libcrypto.so.10 /lib64/.
         fi
     fi
 
