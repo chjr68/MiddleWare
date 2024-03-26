@@ -55,21 +55,22 @@ function Decompress_Rpms()
 }
 
 #용량 확보
-function Delete_Rpms_Directory()
+function Delete_Directory()
 {
     Write_Log $FUNCNAME $LINENO "start"
     
     # rpms.tar.gz 해제 파일 삭제
+
     # 테스트 완료 전 까지 주석처리
     #rm -rf ${g_path}/rpms
 
-    #WEB module 압축 해제 디렉토리 삭제
-    ls -l ${g_path}/package/module/ | grep ^d | awk '{print $NF}' | xargs rm -rf
-    ls -l ${g_path}/package/1.WEB/ | grep ^d | awk '{print $NF}' | xargs rm -rf
-    ls -l ${g_path}/package/2.WAS/ | grep ^d | awk '{print $NF}' | xargs rm -rf
-    ls -l ${g_path}/package/3.DB/MariaDB/ | grep ^d | awk '{print $NF}' | xargs rm -rf
-    ls -l ${g_path}/package/3.DB/MySQL/ | grep ^d | awk '{print $NF}' | xargs rm -rf
-    ls -l ${g_path}/package/3.DB/PostgreSQL/ | grep ^d | awk '{print $NF}' | xargs rm -rf
+    # module 압축 해제 디렉토리 삭제
+    # ls -l ${g_path}/package/1.WEB/ | grep ^d | awk '{print $NF}' | xargs rm -rf
+    # find ${g_path}/package/module/. -type d | xargs rm -rf > /dev/null 2>&1
+    # find ${g_path}/package/2.WAS/. -type d | xargs rm -rf > /dev/null 2>&1
+    # find ${g_path}/package/3.DB/MariaDB/. -type d | xargs rm -rf > /dev/null 2>&1
+    # find ${g_path}/package/3.DB/MySQL/. -type d | xargs rm -rf > /dev/null 2>&1
+    # find ${g_path}/package/3.DB/PostgreSQL/. -type d | xargs rm -rf > /dev/null 2>&1
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -88,28 +89,6 @@ function Install_Rpms()
         local jump=$((1000/`echo ${CHKRPMLIST} | wc -w`))
     fi
 
-    #OS별 추가 필수모듈이 있을경우
-    if [ $OS_TYPE == 1 ]
-    #CentOS일 경우
-    then
-        # 해당 시스템의 공개키가 누락되었을 경우 발생되는 경고 메시지가 출력 되지 않도록 key 파일 import 수행
-        rpm --import /etc/pki/rpm-gpg/RPM* >> $RPM_LOG 2>&1
-    elif [ OS_TYPE == 2 ]
-    #Ubuntu일 경우
-    then
-        CHKRPMLIST+=" msgfmt"
-    elif [ OS_TYPE == 3 ]
-    #RockyOS일 경우
-    then
-        CHKRPMLIST+=" compat-openssl10"
-
-    elif [ OS_TYPE == 4 ]
-    #Amazon Linux일 경우
-    then
-        :
-    fi
-
-
     for rpm_string in $CHKRPMLIST
     do
         MSG="Install RPM : ${rpm_string}"
@@ -124,21 +103,21 @@ function Install_Rpms()
         #      추후 폐쇄망에서 사용가능하도록 의존성파일 rpm 화
         case ${rpm_string} in      
             net-tools)
-                #CentOS / RockyOS일 경우
+                #CentOS / RockyOS
                 if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
                 then
                     if [ -z "`rpm -qa net-tools`" ]
                     then
                         rpm -Uvh ${g_path}/rpms/centos/core-rpms/net-tools-2.0-0.22.20131004git.el7.x86_64.rpm >> $RPM_LOG 2>&1
                     fi
-                #Ubunt일 경우
+                #Ubuntu
                 elif [ $OS_TYPE == 2 ]
                 then
                     if [ -z "`dpkg -l | cut -d" " -f3 | grep net-tools`" ]
                     then
                         dpkg -i ${g_path}/rpms/ubuntu/core-debs/net-tools_2.0-1.22_amd64.deb >> $RPM_LOG 2>&1
                     fi
-                #Amazon Linux일 경우
+                #Amazon Linux
                 elif [ $OS_TYPE == 4 ]
                 then
                     :
@@ -186,24 +165,6 @@ function Install_Rpms()
                     :
                 fi
                 ;;
-            gdb)
-                if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
-                then
-                    if [ -z "`rpm -qa gdb`" ]
-                    then
-                        rpm -Uvh ${g_path}/rpms/centos/core-rpms/gdb-7.6.1-110.el7.x86_64.rpm >> $RPM_LOG 2>&1
-                    fi
-                elif [ $OS_TYPE == 2 ]
-                then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep gdb`" ]
-                    then
-                        :
-                    fi
-                elif [ $OS_TYPE == 4 ]
-                then
-                    :
-                fi
-                ;;
             wget)
                 if [ $OS_TYPE == 1 ]
                 then
@@ -221,8 +182,8 @@ function Install_Rpms()
                 then
                     if [ -z "`rpm -qa wget`" ]
                     then
-                        rpm -Uvh ${g_path}/rpms/rocky/core-rpms/wget-1.19.5-11.el8.x86_64.rpm >> $RPM_LOG 2>&1
                         rpm -Uvh ${g_path}/rpms/rocky/core-rpms/libmetalink-0.1.3-7.el8.x86_64.rpm >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/rocky/core-rpms/wget-1.19.5-11.el8.x86_64.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -248,81 +209,31 @@ function Install_Rpms()
                 fi
                 ;;
             tcpdump)
-            if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
-            then
-                if [ -z "`rpm -qa tcpdump`" ]
+                if [ $OS_TYPE == 1 ]
                 then
-                    rpm -Uvh ${g_path}/rpms/centos/tcpdump/libpcap-1.5.3-11.el7.x86_64.rpm >> $RPM_LOG 2>&1
-                    rpm -Uvh ${g_path}/rpms/centos/tcpdump/tcpdump-4.9.2-3.el7.x86_64.rpm >> $RPM_LOG 2>&1
-                fi
-            elif [ $OS_TYPE == 2 ]
-            then
-                if [ -z "`dpkg -l | cut -d" " -f3 | grep tcpdump`" ]
-                then
-                    dpkg -i ${g_path}/rpms/ubuntu/tcpdump/libpcap_1.5.3-12_amd64.deb >> $RPM_LOG 2>&1
-                    dpkg -i ${g_path}/rpms/ubuntu/tcpdump/tcpdump_4.9.2-4_amd64.deb >> $RPM_LOG 2>&1
-                fi
-            elif [ $OS_TYPE == 4 ]
-            then
-                :
-            fi
-            ;;    
-            ntpdate)
-                if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
-                then
-                    if [ -z "`rpm -qa ntpdate`" ]
+                    if [ -z "`rpm -qa tcpdump`" ]
                     then
-                        rpm -Uvh ${g_path}/rpms/centos/ntp/ntpdate-4.2.6p5-28.el7.centos.x86_64.rpm --nodeps >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/centos/tcpdump/libpcap-1.5.3-11.el7.x86_64.rpm >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/centos/tcpdump/tcpdump-4.9.2-3.el7.x86_64.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep ntpdate`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep tcpdump`" ]
                     then
-                        :
+                        dpkg -i ${g_path}/rpms/ubuntu/tcpdump/libpcap_1.5.3-12_amd64.deb >> $RPM_LOG 2>&1
+                        dpkg -i ${g_path}/rpms/ubuntu/tcpdump/tcpdump_4.9.2-4_amd64.deb >> $RPM_LOG 2>&1
+                    fi
+                elif [ $OS_TYPE == 3 ]
+                then
+                    if [ -z "`rpm -qa tcpdump`" ]
+                    then
+                        rpm -Uvh ${g_path}/rpms/centos/tcpdump/tcpdump-4.9.3-3.el8_9.1.x86_64.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
                     :
                 fi
-                ;;
-            rdate)
-                if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
-                then
-                    if [ -z "`rpm -qa rdate`"   ]
-                    then
-                        rpm -Uvh ${g_path}/rpms/centos/ntp/rdate-1.4-25.el7.x86_64.rpm >> $RPM_LOG 2>&1
-                    fi
-                elif [ $OS_TYPE == 2 ]
-                then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep rdate`" ]
-                    then
-                        dpkg -i ${g_path}/rpms/ubuntu/ntp/rdate_1.4-26_amd64.deb >> $RPM_LOG 2>&1
-                    fi
-                elif [ $OS_TYPE == 4 ]
-                then
-                    :
-                fi
-                ;;
-            ntp)
-                if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
-                then
-                    if [ -z "`rpm -qa ntp`" ]
-                    then
-                        rpm -Uvh ${g_path}/rpms/centos/ntp/ntpdate-4.2.6p5-28.el7.centos.x86_64.rpm --nodeps >> $RPM_LOG 2>&1
-                        rpm -Uvh ${g_path}/rpms/centos/ntp/autogen-libopts-5.18-5.el7.x86_64.rpm >> $RPM_LOG 2>&1
-                        rpm -Uvh ${g_path}/rpms/centos/ntp/ntp-4.2.6p5-28.el7.centos.x86_64.rpm >> $RPM_LOG 2>&1
-                    fi
-                elif [ $OS_TYPE == 2 ]
-                then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep ntp`" ]
-                    then
-                        :
-                    fi
-                elif [ $OS_TYPE == 4 ]
-                then
-                    :
-                fi
-                ;;
+                ;;    
             make)
                 if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
                 then
@@ -371,9 +282,10 @@ function Install_Rpms()
             expat) 
                 if [ $OS_TYPE == 1 ]
                 then
-                    if [ -z "`rpm -qa expat`" ]
+                    if [ -z "`rpm -qa expat-devel`" ]
                     then            
                         rpm -Uvh ${g_path}/rpms/centos/yum/apache/expat/*.rpm >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/centos/yum/apache/expat/expat-devel-2.1.0-15.el7_9.x86_64.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
@@ -383,9 +295,10 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 3 ]
                 then
-                    if [ -z "`rpm -qa expat`" ]
+                    if [ -z "`rpm -qa expat-devel`" ]
                     then
-                        rpm -Uvh ${g_path}/rpms/rocky/dnf/apache/expat/*.rpm >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/rocky/dnf/apache/expat/expat-devel-2.2.5-11.el8.x86_64.rpm >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/rocky/dnf/apache/expat/expat-2.2.5-11.el8.x86_64.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -436,7 +349,7 @@ function Install_Rpms()
                 fi
                 ;;      
             ncurses) 
-                if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
+                if [ $OS_TYPE == 1 ]
                 then
                     if [ -z "`rpm -qa ncurses`" ]
                     then            
@@ -454,7 +367,7 @@ function Install_Rpms()
                 fi
                 ;;    
             python3) 
-                if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
+                if [ $OS_TYPE == 1 ]
                 then
                     if [ -z "`rpm -qa python3`" ]
                     then            
@@ -466,13 +379,20 @@ function Install_Rpms()
                     then
                         dpkg -i ${g_path}/rpms/ubuntu/apt/db/python/*.deb >> $RPM_LOG 2>&1
                     fi
+                elif [ $OS_TYPE == 3 ]
+                then
+                    if [ -z "`rpm -qa python3`" ]
+                    then            
+                        rpm -Uvh ${g_path}/rpms/rocky/dnf/db/python/*.rpm >> $RPM_LOG 2>&1
+                    fi
+
                 elif [ $OS_TYPE == 4 ]
                 then
                     :
                 fi
                 ;;  
             readline-devel) 
-                if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
+                if [ $OS_TYPE == 1 ]
                 then
                     if [ -z "`rpm -qa readline-devel`" ]
                     then            
@@ -484,13 +404,19 @@ function Install_Rpms()
                     then
                         dpkg -i ${g_path}/rpms/ubuntu/apt/db/libreadline/*.deb >> $RPM_LOG 2>&1
                     fi
+                elif [ $OS_TYPE == 3 ]
+                then
+                    if [ -z "`rpm -qa readline-devel`" ]
+                    then            
+                        rpm -Uvh ${g_path}/rpms/rocky/dnf/db/readline/*.rpm >> $RPM_LOG 2>&1
+                    fi
                 elif [ $OS_TYPE == 4 ]
                 then
                     :
                 fi
                 ;;  
             zlib-devel) 
-                if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
+                if [ $OS_TYPE == 1 ]
                 then
                     if [ -z "`rpm -qa zlib-devel`" ]
                     then            
@@ -499,9 +425,15 @@ function Install_Rpms()
                     fi
                 elif [ $OS_TYPE == 2 ]
                 then
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep zlib`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep zlib1g-dev`" ]
                     then
-                        dpkg -i ${g_path}/rpms/ubuntu/apt/db/zlib/zlib-devel_1.2.7-22_amd64.deb >> $RPM_LOG 2>&1
+                        dpkg -i ${g_path}/rpms/ubuntu/apt/db/zlib/zlib1g-dev_1%3a1.2.11.dfsg-2ubuntu9.2_amd64.deb >> $RPM_LOG 2>&1
+                    fi
+                elif [ $OS_TYPE == 3 ]
+                then
+                    if [ -z "`rpm -qa zlib-devel`" ]
+                    then            
+                        rpm -Uvh ${g_path}/rpms/rocky/dnf/db/zlib/*.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
                 then
@@ -512,9 +444,10 @@ function Install_Rpms()
                 #UbuntuS 일 경우 별도 설치
                 if [ $OS_TYPE == 2 ]
                 then    
-                    if [ -z "`dpkg -l | cut -d" " -f3 | grep -w gettext`" ]
+                    if [ -z "`dpkg -l | cut -d" " -f3 | grep ^gettext$`" ]
                     then
-                        dpkg -i ${g_path}/rpms/ubuntu/apt/db/msgfmt/*.deb >> $RPM_LOG 2>&1
+                        dpkg -i ${g_path}/rpms/ubuntu/apt/db/msgfmt/libgomp1_12.3.0-1ubuntu1~22.04_amd64.deb >> $RPM_LOG 2>&1
+                        dpkg -i ${g_path}/rpms/ubuntu/apt/db/msgfmt/gettext_0.21-4ubuntu4_amd64.deb >> $RPM_LOG 2>&1
                     fi
                 fi
                 ;; 
@@ -531,12 +464,6 @@ function Install_Rpms()
         esac
     done
 
-    if [ $Progress -ne 100 ]
-    then
-        Progress=100        
-        echo $Progress | tms_progress --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
-    fi
-
     Write_Log $FUNCNAME $LINENO "end"
 }
 
@@ -549,6 +476,26 @@ function Check_Rpms_Dependency()
     then
         Write_Log $FUNCNAME $LINENO "skip check dependency rpms (.chkrpms exists)"
         return
+    fi
+
+    #OS별 추가 필수모듈이 있을경우
+    if [ $OS_TYPE == 1 ]
+    #CentOS
+    then
+        # 해당 시스템의 공개키가 누락되었을 경우 발생되는 경고 메시지가 출력 되지 않도록 key 파일 import 수행
+        rpm --import /etc/pki/rpm-gpg/RPM* >> $RPM_LOG 2>&1
+    elif [ $OS_TYPE == 2 ]
+    #Ubuntu
+    then
+        CHKRPMLIST+=" msgfmt"
+    elif [ $OS_TYPE == 3 ]
+    #RockyOS
+    then
+        CHKRPMLIST+=" compat-openssl10"
+    elif [ $OS_TYPE == 4 ]
+    #Amazon Linux
+    then
+        :
     fi
 
     retval=0
@@ -572,7 +519,7 @@ function Check_Rpms_Dependency()
 
         echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
 
-        #설치한 파일이 없으면, 표준버전은 설치\
+        #설치한 파일이 없으면 설치
         if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
         then
             if [ -z "`rpm -qa ${rpm_string}`" ]
@@ -592,12 +539,6 @@ function Check_Rpms_Dependency()
         fi    
     done
 
-    if [ $Progress -ne 100 ]
-    then
-        Progress=100        
-        echo $Progress | tms_progress --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
-    fi
-
     if [ ${retval} -eq 1 ]
     then
         #rpm 설치
@@ -608,4 +549,3 @@ function Check_Rpms_Dependency()
 
     Write_Log $FUNCNAME $LINENO "end"
 }
-

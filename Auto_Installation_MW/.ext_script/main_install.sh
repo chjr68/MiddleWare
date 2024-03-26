@@ -106,13 +106,56 @@ function Make_Dir()
 #TODO: Progress bar 모듈마다 작동하도록 (모듈1설치 1~100% -> 모듈2설치 1~100% ...)
 #      config 및 환경변수 설정해주는 코드 작성
 
+function Set_Configure()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    local STEP="Configure"
+    Progress=$(($Progress+$jump))
+
+    echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG\n $STEP" 10 70 0
+    ./configure $1 > /dev/null 2>&1
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Set_Make()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    local STEP="Make"
+    Progress=$(($Progress+$jump))
+
+    echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG\n $STEP" 10 70 0
+    make >> $1 2>&1
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Set_Make_Install()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    local STEP="Make Install"
+    Progress=$(($Progress+$jump))
+
+    echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG\n $STEP" 10 70 0
+    make install >> $1 2>&1
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
 function Install_Web()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
     case $MENU_OPT_WEB_TYPE in
         1) 
-            #TODO: 현재 2.4.X 버전만 호환 됨. apr, apr-util 사용자 커스텀생성으로 바꿔야 될듯
+            count=16
+            jump=$((100/$count))
+
+            #apache는 모듈별 함수로 나뉘어 있어서 Progressbar 개선완료.
+            #타 MW는 검토필요
             #module install
             Install_Apache_Apr
             Install_Apache_Apr_Util
@@ -129,11 +172,9 @@ function Install_Web()
     Write_Log $FUNCNAME $LINENO "end"
 }
 
-
 function Install_Apache_Apr()
 {
     Write_Log $FUNCNAME $LINENO "start"
-    local jump=0
 
     MSG="Apr Install ( $APR_VERSION )"
     Progress=$(($Progress+$jump))
@@ -141,9 +182,9 @@ function Install_Apache_Apr()
     tar zxf ${g_path}/package/module/${APR_VERSION}.tar.gz -C ${g_path}/package/module
 
     cd ${g_path}/package/module/${APR_VERSION}
-    ./configure --prefix=$INSTALL_PATH/apr > /dev/null 2>&1
-    make > ${g_path}/trace_log/apr.log 2>&1
-    make install >> ${g_path}/trace_log/apr.log 2>&1
+    Set_Configure --prefix=$INSTALL_PATH/apr
+    Set_Make ${g_path}/trace_log/apr.log 
+    Set_Make_Install ${g_path}/trace_log/apr.log
 
     #TODO: 모듈버전을 넣어야 됨.
     echo $APR_VERSION >> $VERSION
@@ -154,7 +195,6 @@ function Install_Apache_Apr()
 function Install_Apache_Apr_Util()
 {
     Write_Log $FUNCNAME $LINENO "start"
-    local jump=25
 
     MSG="Apr-Util Install ( $APR_UTIL_VERSION )"
     Progress=$(($Progress+$jump))
@@ -162,9 +202,9 @@ function Install_Apache_Apr_Util()
     tar zxf ${g_path}/package/module/${APR_UTIL_VERSION}.tar.gz -C ${g_path}/package/module
 
     cd ${g_path}/package/module/${APR_UTIL_VERSION}
-    ./configure --prefix=$INSTALL_PATH/apr-util --with-apr=$INSTALL_PATH/apr > /dev/null 2>&1
-    make > ${g_path}/trace_log/apr-util.log 2>&1
-    make install > ${g_path}/trace_log/apr-util.log 2>&1
+    Set_Configure "--prefix=$INSTALL_PATH/apr-util --with-apr=$INSTALL_PATH/apr"
+    Set_Make ${g_path}/trace_log/apr-util.log
+    Set_Make_Install ${g_path}/trace_log/apr-util.log
 
     echo $APR_UTIL_VERSION >> $VERSION
 
@@ -174,7 +214,6 @@ function Install_Apache_Apr_Util()
 function Install_Apache_Pcre()
 {
     Write_Log $FUNCNAME $LINENO "start"
-    local jump=25
 
     MSG="Pcre Install ( $PCRE_VERSION )"
     Progress=$(($Progress+$jump))
@@ -182,9 +221,9 @@ function Install_Apache_Pcre()
     tar zxf ${g_path}/package/module/${PCRE_VERSION}.tar.gz -C ${g_path}/package/module
 
     cd ${g_path}/package/module/${PCRE_VERSION}
-    ./configure --prefix=$INSTALL_PATH/pcre > ${g_path}/trace_log/pcre.log 2>&1
-    make >> ${g_path}/trace_log/pcre.log 2>&1
-    make install >> ${g_path}/trace_log/pcre.log 2>&1
+    Set_Configure "--prefix=$INSTALL_PATH/pcre"
+    Set_Make ${g_path}/trace_log/pcre.log
+    Set_Make_Install ${g_path}/trace_log/pcre.log
 
     echo $PCRE_VERSION >> $VERSION
 
@@ -194,7 +233,6 @@ function Install_Apache_Pcre()
 function Install_Apache()
 {
     Write_Log $FUNCNAME $LINENO "start"
-    local jump=25
 
     MSG="Apache Install ( $MW_WEB_VERSION )"
     Progress=$(($Progress+$jump))
@@ -210,16 +248,16 @@ function Install_Apache()
 
     if [ $major == 2 ] && [ $minor -ge 4 ] 
     then
-        ./configure --prefix=$INSTALL_PATH/${MW_WEB_VERSION} \
+        Set_Configure "--prefix=$INSTALL_PATH/${MW_WEB_VERSION} \
         --enable-module=so --enable-rewrite --enable-so \
         --with-apr=$INSTALL_PATH/apr \
         --with-apr-util=$INSTALL_PATH/apr-util \
         --with-pcre=$INSTALL_PATH/pcre/bin/pcre-config \
-        --enable-mods-shared=all > ${g_path}/trace_log/apache.log 2>&1
+        --enable-mods-shared=all"
     else
-        ./configure --prefix=$INSTALL_PATH/${MW_WEB_VERSION} \
+        Set_Configure "--prefix=$INSTALL_PATH/${MW_WEB_VERSION} \
         --enable-module=so --enable-rewrite --enable-so \
-        --enable-mods-shared=all > ${g_path}/trace_log/apache.log 2>&1
+        --enable-mods-shared=all"
     fi
 
     #Rocky expat 에러처리
@@ -231,8 +269,8 @@ function Install_Apache()
         fi
     fi
 
-    make >> ${g_path}/trace_log/apache.log 2>&1
-    make install >> ${g_path}/trace_log/apache.log 2>&1
+    Set_Make ${g_path}/trace_log/apache.log
+    Set_Make_Install ${g_path}/trace_log/apache.log
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -291,7 +329,13 @@ WantedBy=multi-user.target" > /etc/systemd/system/httpd.service
     # httpd v2.0.x 추가 수행
     if [ $major == 2 ] && [ $minor == 0 ] 
     then
-        sed -i '/^Group #-1/s@#-1@nobody@' $INSTALL_PATH/$MW_WEB_VERSION/conf/httpd.conf
+        if [ $OS_TYPE == 1 ] || [ $OS_TYPE == 3 ]
+        then
+            sed -i '/^Group #-1/s@#-1@nobody@' $INSTALL_PATH/$MW_WEB_VERSION/conf/httpd.conf
+        elif [ $OS_TYPE == 2 ]
+        then
+            sed -i '/^Group #-1/s@#-1@nogroup@' $INSTALL_PATH/$MW_WEB_VERSION/conf/httpd.conf
+        fi
     fi
 
     #서비스 시작
@@ -653,40 +697,40 @@ log-error=$INSTALL_PATH/$MW_DB_VERSION/log/mysql.log
 pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
 " > /etc/my.cnf
 
-    #라이브러리 경로 설정
-    if [ $OS_TYPE == 2 ]
-    then
-        #libssl & libcrypto
-        if [ -z "`find /usr/lib -name libssl.so.10`" ] || [ -z "`find /usr/lib -name libcrypto.so.10`" ]
-        then  
-            dpkg -i ${g_path}/rpms/deb/apt/db/openssl/openssl-libs_1.0.2k-27_amd64.deb >> $RPM_LOG 2>&1
+    # #라이브러리 경로 설정
+    # if [ $OS_TYPE == 2 ]
+    # then
+    #     #libssl & libcrypto
+    #     if [ -z "`find /usr/lib -name libssl.so.10`" ] || [ -z "`find /usr/lib -name libcrypto.so.10`" ]
+    #     then  
+    #         dpkg -i ${g_path}/rpms/deb/apt/db/openssl/openssl-libs_1.0.2k-27_amd64.deb >> $RPM_LOG 2>&1
 
-            ln -s /usr/lib64/libssl.so.10 /usr/lib/x86_64-linux-gnu/libssl.so.10
-            ln -s /usr/lib64/libcrypto.so.10 /usr/lib/x86_64-linux-gnu/libcrypto.so.10
-            ln -s /usr/lib/x86_64-linux-gnu/libssl.so.10 /lib/x86_64-linux-gnu/libssl.so.10
-            ln -s /usr/lib/x86_64-linux-gnu/libcrypto.so.10 /lib/x86_64-linux-gnu/libcrypto.so.10
-        #libncurses
-        elif [ -z "`find /usr/lib -name libncurses.so.5`" ]
-        then            
-            ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6.3 /usr/lib/x86_64-linux-gnu/libncurses.so.5
-        #libtinfo
-        elif [ -z "`find /usr/lib -name libtinfo.so.5`" ]
-        then
-            ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6.3 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
-        fi
-    fi
+    #         ln -s /usr/lib64/libssl.so.10 /usr/lib/x86_64-linux-gnu/libssl.so.10
+    #         ln -s /usr/lib64/libcrypto.so.10 /usr/lib/x86_64-linux-gnu/libcrypto.so.10
+    #         ln -s /usr/lib/x86_64-linux-gnu/libssl.so.10 /lib/x86_64-linux-gnu/libssl.so.10
+    #         ln -s /usr/lib/x86_64-linux-gnu/libcrypto.so.10 /lib/x86_64-linux-gnu/libcrypto.so.10
+    #     #libncurses
+    #     elif [ -z "`find /usr/lib -name libncurses.so.5`" ]
+    #     then            
+    #         ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6.3 /usr/lib/x86_64-linux-gnu/libncurses.so.5
+    #     #libtinfo
+    #     elif [ -z "`find /usr/lib -name libtinfo.so.5`" ]
+    #     then
+    #         ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6.3 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
+    #     fi
+    # fi
 
-    if [ $OS_TYPE == 3 ]
+    if [ $OS_TYPE == 2 ] || [ $OS_TYPE == 3 ]
     then
         #libssl
         if [ -z "`find /usr/lib64 -name libssl.so.10`" ]
         then            
-            cp ${g_path}/rpms/rocky/dnf/db/libssl/libssl.so.10 /lib64/.
+            cp ${g_path}/rpms/common-lib/libssl/libssl.so.10 /lib64/.
         fi
         #libcrypto
         if [ -z "`find /usr/lib64 -name libcrypto.so.10`" ]
         then
-            cp ${g_path}/rpms/rocky/dnf/db/licrypto/libcrypto.so.10 /lib64/.
+            cp ${g_path}/rpms/common-lib/libcrypto/libcrypto.so.10 /lib64/.
         fi
     fi
 
@@ -735,7 +779,7 @@ function Install_Postgresql()
     Write_Log $FUNCNAME $LINENO "start"
 
     #TODO: Progressbar 하드코딩 말고 로직 변경
-    local jump=50
+    jump=0
 
     MSG="PostgreSQL Install ( $MW_DB_VERSION )"
     Progress=$(($Progress+$jump))
@@ -759,10 +803,25 @@ function Install_Postgresql()
     fi
 
     cd ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}
-    ./configure --prefix=${INSTALL_PATH}/${MW_DB_VERSION} --enable-depend --enable-nls=utf-8 --with-python > /dev/null 2>&1
 
-    make > /dev/null 2>&1
-    make install > /dev/null 2>&1
+    # 버전에 따라 configure 하는 명령어가 다름
+    major=$(echo ${MW_DB_VERSION} | cut -d'-' -f2  | cut -d'.' -f1)
+    minor=$(echo ${MW_DB_VERSION} | cut -d'-' -f2  | cut -d'.' -f2)
+    #patch=$(echo ${MW_DB_VERSION} | cut -d'-' -f2  | cut -d'.' -f3)
+
+    count=4
+    jump=$((100/$count))
+
+    if [ $major == 16 ] && [ $minor -ge 0 ] 
+    then
+        #./configure --prefix=${INSTALL_PATH}/${MW_DB_VERSION} --enable-depend --enable-nls=utf-8 --with-python3 > /dev/null 2>&1
+        Set_Configure "--prefix=${INSTALL_PATH}/${MW_DB_VERSION} --enable-depend --enable-nls=utf-8 --without-icu"
+    else
+        Set_Configure "--prefix=${INSTALL_PATH}/${MW_DB_VERSION} --enable-depend --enable-nls=utf-8"
+    fi
+
+    Set_Make ${g_path}/trace_log/postgresql.log
+    Set_Make_Install ${g_path}/trace_log/postgresql.log
 
     mkdir -p /data/postgresql
     PGDATA="/data/postgresql"
@@ -799,15 +858,17 @@ ExecReload=$INSTALL_PATH/$MW_DB_VERSION/bin/pg_ctl reload -D "${PGDATA}" -s
 # Give a reasonable amount of time for the server to start up/shut down
 TimeoutSec=300 \n
 [Install]
-WantedBy=multi-user.target" > /etc/systemd/system/postgres
+WantedBy=multi-user.target" > /etc/systemd/system/postgres.service
 
     systemctl daemon-reload
     systemctl enable postgres > /dev/null 2>&1
     systemctl restart postgres
 
-    # #postgre 구동
+    # #postgre 구동 및 접속
     # cd ${INSTALL_PATH}/$MW_DB_VERSION/bin/
     # su - postgres -c "postgres -D /data/postgresql/ &" > /dev/null 2>&1 | echo -ne '\n'
+    #
+    # psql -U postgres 
 
     echo $MW_DB_VERSION $INSTALL_PATH >> $VERSION
 
@@ -866,7 +927,6 @@ function Uninstall_Web_Apache()
         sed -i "/$APR_VERSION/d" $VERSION
         sed -i "/$APR_UTIL_VERSION/d" $VERSION
         sed -i "/$PCRE_VERSION/d" $VERSION
-
     fi
 
     Write_Log $FUNCNAME $LINENO "end"
@@ -944,6 +1004,7 @@ function Uninstall_Db_Mariadb()
         if [ `cat /etc/group | grep maria | wc -l` -eq 1 ]
         then
             userdel maria
+            rm -rf /home/maria
         fi
 
         rm -rf /usr/local/mysql
@@ -951,6 +1012,7 @@ function Uninstall_Db_Mariadb()
         rm -rf /etc/init.d/mariadb.service
         rm -rf /etc/systemd/system/mariadb.service
         rm -rf /etc/my.cnf
+        rm -rf /tmp/mysql.sock
 
         rm -rf ${INSTALL_PATH}
         rm -rf /data
@@ -1068,8 +1130,6 @@ function Uninstall_Db_Postgresql()
 
         sed -i "/$MW_DB_VERSION/d" $VERSION
         source /etc/profile
-        
-        userdel postgres
     fi
 
     Write_Log $FUNCNAME $LINENO "end"

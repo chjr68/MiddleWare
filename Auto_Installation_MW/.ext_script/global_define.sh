@@ -35,18 +35,12 @@ OPT_NOT_INSTALL=0 #설치 제외
 
 ################################################ 설치, 제어 옵션
 
-CHKRPMLIST="dialog net-tools tcpdump sshpass gdb wget ntpdate rdate ntp lsof make gcc expat java libaio ncurses python3 readline-devel zlib-devel"
-
-#* Dialog, 기본 OK 로 넘어가는 옵션
-GOPT_SKIP_DIALOG_DEFAULT_OK=${OPT_NONE} #0: yes 선택, 1: no 선택, ${OPT_NONE} : 다이얼로그
+CHKRPMLIST="dialog net-tools tcpdump sshpass wget lsof make gcc expat java libaio ncurses python3 readline-devel zlib-devel"
 
 ################################################ DIALOG 관련
 
 #* progressbar, echo로 대체
-GOPT_ALTER_PROGRESS_DIALOG_TO_ECHO=${OPT_NONE} #1: 대체, ${OPT_NONE} : progress
-
-#* Dialog, 기본 OK 로 넘어가는 옵션
-GOPT_SKIP_DIALOG_DEFAULT_OK=${OPT_NONE} #0: yes 선택, 1: no 선택, ${OPT_NONE} : 다이얼로그
+#jump=0
 
 ################################################ MENU, 설치관련 (+INPUT BOX)
 

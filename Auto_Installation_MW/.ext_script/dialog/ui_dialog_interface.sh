@@ -34,8 +34,6 @@ function Show_Menu()
     5 "Uninstall" \
     2> $OUTFILE
 
-    
-
     item=$(<${OUTFILE})
 
     case $item in
@@ -105,7 +103,8 @@ function Show_Middleware_Type_Menu
         Show_Db_Type_Menu
         ;;
     *)
-        Show_Menu
+        exit
+        ;;
     esac    
     
     Write_Log $FUNCNAME $LINENO "end"
@@ -125,7 +124,8 @@ function Show_Web_Type_Menu
         MENU_OPT_WEB_TYPE="1"
         ;;
     *)
-        Show_Menu
+        exit
+        ;;
     esac    
     
     Write_Log $FUNCNAME $LINENO "end"
@@ -145,7 +145,8 @@ function Show_Was_Type_Menu
         MENU_OPT_WAS_TYPE="1"
         ;;
     *)
-        Show_Menu
+        exit
+        ;;
     esac    
     
     Write_Log $FUNCNAME $LINENO "end"
@@ -173,7 +174,8 @@ function Show_Db_Type_Menu
         MENU_OPT_DB_TYPE="3"
         ;;
     *)
-        Show_Menu
+        exit
+        ;;
     esac
 
     Write_Log $FUNCNAME $LINENO "end"

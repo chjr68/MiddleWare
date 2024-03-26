@@ -31,7 +31,6 @@ function Init_Log()
 
   date >> ${g_path}/trace_log/package_$$.log
 
-  #2022.01 패키지 스크립트 - 주요 알람 로그 추가
   touch ${g_path}/trace_log/trace.log # 1개의 파일에 모두 추가
 
   date >> ${g_path}/trace_log/package.log
@@ -42,7 +41,6 @@ function Init_Log()
   echo "[$(date '+%Y/%m/%d %H:%M:%S')]" > ${RPM_LOG}
 }
 
-#ex) WRITE_LOG $FUNCNAME $LINENO "INSTALL, TMS Serial = " $TMS_SERIAL
 function Write_Log()
 {
   #$$ = pid
