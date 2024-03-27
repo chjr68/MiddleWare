@@ -24,7 +24,7 @@ function Install_Middleware()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    #이미 설치가 되어 있는지 체크 - Factory Install 시에만 수행한다.
+    #이미 설치가 되어 있는지 체크
     Chk_Dir_Exist
 
     case $MENU_OPT_MW_TYPE in
@@ -338,6 +338,9 @@ WantedBy=multi-user.target" > /etc/systemd/system/httpd.service
         fi
     fi
 
+    #경로이동
+    cd ${INSTALL_PATH}
+
     #서비스 시작
     systemctl daemon-reload
     systemctl enable httpd >> ${g_path}/trace_log/apache.log 2>&1
@@ -587,13 +590,13 @@ log-bin                         = /data/mariadb/log-bin/mysql-bin" > /etc/my.cnf
     then
         #libncurses
         if [ -z "`find /usr/lib -name libncurses.so.5`" ]
-        then            
-            ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6.3 /usr/lib/x86_64-linux-gnu/libncurses.so.5
+        then
+            cp ${g_path}/rpms/common-lib/libncurses/libncurses.so.5 /lib/.
         fi
         #libtinfo
         if [ -z "`find /usr/lib -name libtinfo.so.5`" ]
         then
-            ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6.3 /usr/lib/x86_64-linux-gnu/libtinfo.so.5   
+            cp ${g_path}/rpms/common-lib/libtinfo/libtinfo.so.5 /lib/.
         fi
         #libsystemd-daemon
         if [ -z "`find /usr/lib -name libsystemd-daemon.so.0`" ]
@@ -602,18 +605,17 @@ log-bin                         = /data/mariadb/log-bin/mysql-bin" > /etc/my.cnf
             ln -s /usr/lib64/libsystemd-daemon.so.0 /usr/lib/x86_64-linux-gnu/libsystemd-daemon.so.0    
         fi
     fi
-
     if [ $OS_TYPE == 3 ]
     then
         #libncurses
         if [ -z "`find /usr/lib64 -name libncurses.so.5`" ]
-        then            
-            ln -s /usr/lib64/libncurses.so.6.1 /usr/lib64/libncurses.so.5
+        then
+            cp ${g_path}/rpms/common-lib/libncurses/libncurses.so.5 /lib64/.
         fi
         #libtinfo
         if [ -z "`find /usr/lib64 -name libtinfo.so.5`" ]
         then
-            ln -s /usr/lib64/libtinfo.so.6.1 /usr/lib64/libtinfo.so.5
+            cp ${g_path}/rpms/common-lib/libtinfo/libtinfo.so.5 /lib64/.
         fi
         #libsystemd-daemon
         if [ -z "`find /usr/lib64 -name libsystemd-daemon.so.0`" ]
@@ -720,7 +722,29 @@ pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
     #     fi
     # fi
 
-    if [ $OS_TYPE == 2 ] || [ $OS_TYPE == 3 ]
+    if [ $OS_TYPE == 2 ]
+    then
+        #libssl
+        if [ -z "`find /usr/lib -name libssl.so.10`" ]
+        then            
+            cp ${g_path}/rpms/common-lib/libssl/libssl.so.10 /lib/.
+        fi
+        #libcrypto
+        if [ -z "`find /usr/lib -name libcrypto.so.10`" ]
+        then
+            cp ${g_path}/rpms/common-lib/libcrypto/libcrypto.so.10 /lib/.
+        fi
+        #libncurses
+        if [ -z "`find /usr/lib -name libncurses.so.5`" ]
+        then
+            cp ${g_path}/rpms/common-lib/libncurses/libncurses.so.5 /lib/.
+        fi
+        #libtinfo
+        if [ -z "`find /usr/lib -name libtinfo.so.5`" ]
+        then
+            cp ${g_path}/rpms/common-lib/libtinfo/libtinfo.so.5 /lib/.
+        fi
+    elif [ $OS_TYPE == 3 ]
     then
         #libssl
         if [ -z "`find /usr/lib64 -name libssl.so.10`" ]
@@ -732,7 +756,18 @@ pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
         then
             cp ${g_path}/rpms/common-lib/libcrypto/libcrypto.so.10 /lib64/.
         fi
+        #libncurses
+        if [ -z "`find /usr/lib64 -name libncurses.so.5`" ]
+        then
+            cp ${g_path}/rpms/common-lib/libncurses/libncurses.so.5 /lib64/.
+        fi
+        #libtinfo
+        if [ -z "`find /usr/lib64 -name libtinfo.so.5`" ]
+        then
+            cp ${g_path}/rpms/common-lib/libtinfo/libtinfo.so.5 /lib64/.
+        fi
     fi
+
 
     #db 설치
     cd ${INSTALL_PATH}/${MW_DB_VERSION}/bin
@@ -860,6 +895,9 @@ TimeoutSec=300 \n
 [Install]
 WantedBy=multi-user.target" > /etc/systemd/system/postgres.service
 
+    #경로이동
+    cd ${INSTALL_PATH}
+
     systemctl daemon-reload
     systemctl enable postgres > /dev/null 2>&1
     systemctl restart postgres
@@ -904,23 +942,23 @@ function Uninstall_Web_Apache()
         fi
 
         #TODO: apr, apr-util, pcre 각각 다 지워줘야 됨
-        cd ${g_path}/package/module/${APR_VERSION}
-        make distclean > /dev/null 2>&1
+        # cd ${g_path}/package/module/${APR_VERSION}
+        # make distclean > /dev/null 2>&1
         
-        cd ${g_path}/package/module/${APR_UTIL_VERSION}
-        make distclean > /dev/null 2>&1
+        # cd ${g_path}/package/module/${APR_UTIL_VERSION}
+        # make distclean > /dev/null 2>&1
 
-        cd ${g_path}/package/module/${PCRE_VERSION}
-        make distclean > /dev/null 2>&1
+        # cd ${g_path}/package/module/${PCRE_VERSION}
+        # make distclean > /dev/null 2>&1
 
         cd ${g_path}
 
         rm -rf /etc/systemd/system/httpd.service
         rm -rf /etc/init.d/httpd
-        rm -rf ${g_path}/package/1.WEB/${MW_WEB_VERSION}
-        rm -rf ${g_path}/package/module/${APR_VERSION}
-        rm -rf ${g_path}/package/module/${APR_UTIL_VERSION}
-        rm -rf ${g_path}/package/module/${PCRE_VERSION}
+        [ -d ${g_path}/package/1.WEB/${MW_WEB_VERSION} ] && rm -rf ${g_path}/package/1.WEB/${MW_WEB_VERSION}
+        [ -d ${g_path}/package/module/${APR_VERSION} ] && rm -rf ${g_path}/package/module/${APR_VERSION}
+        [ -d ${g_path}/package/module/${APR_UTIL_VERSION} ] && rm -rf ${g_path}/package/module/${APR_UTIL_VERSION}
+        [ -d ${g_path}/package/module/${PCRE_VERSION} ] && rm -rf ${g_path}/package/module/${PCRE_VERSION}
         rm -rf ${INSTALL_PATH}
 
         sed -i "/$MW_WEB_VERSION/d" $VERSION
@@ -960,7 +998,7 @@ function Uninstall_Was_Tomcat()
         fi
         
         rm -rf /etc/systemd/system/tomcat.service
-        rm -rf ${g_path}/package/2.WAS/${MW_WAS_VERSION}
+        [ -d ${g_path}/package/2.WAS/${MW_WAS_VERSION} ] && rm -rf ${g_path}/package/2.WAS/${MW_WAS_VERSION}
         rm -rf ${INSTALL_PATH}
 
         #확인필요, tomcat path라인 삭제 구문
@@ -1071,7 +1109,7 @@ function Uninstall_Db_Mysql()
         rm -rf ${INSTALL_PATH}
         rm -rf /data
 
-        #TODO: 경로에 '/' 포함되어 있어서 처리 필요
+        #TODO: 경로에 '/' 포함되어 있어서 처리 필요 (완료)
         sed -i '/^export PATH=/s@:'$INSTALL_PATH/$MW_DB_VERSION/bin'@''@' /etc/profile
 
         sed -i "/$MW_DB_VERSION/d" $VERSION
@@ -1116,11 +1154,10 @@ function Uninstall_Db_Postgresql()
             userdel postgres
         fi
 
-        cd ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}
-        make distclean > /dev/null 2>&1
-        cd ${g_path}
+        # cd ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}
+        # make distclean > /dev/null 2>&1
 
-        rm -rf ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}
+        [ -d ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION} ] && rm -rf ${g_path}/package/3.DB/PostgreSQL/${MW_DB_VERSION}
         rm -rf ${INSTALL_PATH}
         rm -rf /data
         rm -rf /etc/systemd/system/postgres

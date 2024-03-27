@@ -29,10 +29,6 @@ PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
 
 OPT_NONE=-9999 #초기값
 
-#설치, 부분설치 옵션
-OPT_ENABLE_INSTALL=1 #설치 활성
-OPT_NOT_INSTALL=0 #설치 제외
-
 ################################################ 설치, 제어 옵션
 
 CHKRPMLIST="dialog net-tools tcpdump sshpass wget lsof make gcc expat java libaio ncurses python3 readline-devel zlib-devel"
@@ -46,6 +42,7 @@ CHKRPMLIST="dialog net-tools tcpdump sshpass wget lsof make gcc expat java libai
 
 #* 설치메인 메뉴 선택
 MENU_OPT_MAIN_INSTALL=${OPT_NONE} # 1:Install Middleware, 2:Show Version, 3:UnInstall.. ${OPT_NONE} : DIALOG
+MENU_OPT_ENTER_INSTALL_PATH=1
 MENU_OPT_MW_TYPE=${OPT_NONE} # 1:WEB, 2:WAS, 3:DB, ${OPT_NONE} : DIALOG
 MENU_OPT_WEB_TYPE=${OPT_NONE} # 1:Apache, ${OPT_NONE} : DIALOG
 MENU_OPT_WAS_TYPE=${OPT_NONE} # 1:Tomcat, ${OPT_NONE} : DIALOG

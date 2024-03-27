@@ -22,9 +22,9 @@ function Show_Menu()
 
     #1. 메뉴 진입 시, WEB/WAS/DB 3가지 항목 출력 > 패키지 디렉토리에서 설치가능 버전 출력 > 경로 입력(디폴트 제공)
     #2. installed version / not installed
-    #3. 설치된 미들웨어 별 삭제
+    #3. 미들웨어 연동 지원 (추후)
     #4. 취약점 조치 (추후)
-    #5. 미들웨어 연동 지원 (추후)
+    #5. 설치된 미들웨어 별 삭제
 
     dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Select Menu" 10 50 0 \
     1 "Install Middleware" \
@@ -298,8 +298,6 @@ function Select_Apr_Version()
                 ;;
         esac
 
-        #TODO: item에 선택한 번호의 버전을 가져오고 싶음 (완료)
-        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나? 
         item=$(<${OUTFILE})
 
         APR_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
@@ -342,8 +340,6 @@ function Select_AprUtil_Version()
                 ;;
         esac
 
-        #TODO: item에 선택한 번호의 버전을 가져오고 싶음 (완료)
-        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나? 
         item=$(<${OUTFILE})
 
         APR_UTIL_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
@@ -386,8 +382,6 @@ function Select_Pcre_Version()
                 ;;
         esac
 
-        #TODO: item에 선택한 번호의 버전을 가져오고 싶음 (완료)
-        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나? 
         item=$(<${OUTFILE})
 
         PCRE_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
@@ -431,8 +425,6 @@ function Select_Was_Version()
                 ;;
         esac
 
-        #TODO: item에 선택한 번호의 버전을 가져오고 싶음 (완료)
-        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나? 
         item=$(<${OUTFILE})
 
         MW_WAS_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
@@ -485,8 +477,6 @@ function Select_Db_Version()
                 ;;
         esac
 
-        #TODO: item에 선택한 번호의 버전을 가져오고 싶음 (완료)
-        #TMPFILE에 선택가능한 버전 모두 입력되어 있으니까, 번호랑 매핑해서 버전포맷 가져오면 되지않나? 
         item=$(<${OUTFILE})
 
         MW_DB_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
@@ -505,8 +495,16 @@ function Input_Middleware_Install_Path()
     #TODO: BACKTITLE 중괄호로 안감싸도되나?
     dialog --title "${TITLE}" --backtitle "$BACKTITLE" --inputbox "${dialog_message}" 9 70 "${INSTALL_PATH}" 2> $OUTFILE
 
-    #선택한 경로로 업데이트
-    INSTALL_PATH=$(<${OUTFILE})
+    answer=$?
+    case $answer in
+        0)
+            #선택한 경로로 업데이트
+            INSTALL_PATH=$(<${OUTFILE})
+            ;;
+        1)
+            exit
+            ;;
+    esac
 
     Write_Log $FUNCNAME $LINENO "end"
 }

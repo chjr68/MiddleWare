@@ -65,12 +65,12 @@ function Delete_Directory()
     #rm -rf ${g_path}/rpms
 
     # module 압축 해제 디렉토리 삭제
-    # ls -l ${g_path}/package/1.WEB/ | grep ^d | awk '{print $NF}' | xargs rm -rf
-    # find ${g_path}/package/module/. -type d | xargs rm -rf > /dev/null 2>&1
-    # find ${g_path}/package/2.WAS/. -type d | xargs rm -rf > /dev/null 2>&1
-    # find ${g_path}/package/3.DB/MariaDB/. -type d | xargs rm -rf > /dev/null 2>&1
-    # find ${g_path}/package/3.DB/MySQL/. -type d | xargs rm -rf > /dev/null 2>&1
-    # find ${g_path}/package/3.DB/PostgreSQL/. -type d | xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/1.WEB/. -type d | xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/module/. -type d | xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/2.WAS/. -type d | xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/3.DB/MariaDB/. -type d | xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/3.DB/MySQL/. -type d | xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/3.DB/PostgreSQL/. -type d | xargs rm -rf > /dev/null 2>&1
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -227,6 +227,8 @@ function Install_Rpms()
                 then
                     if [ -z "`rpm -qa tcpdump`" ]
                     then
+                        rpm -Uvh ${g_path}/rpms/centos/tcpdump/libibverbs-46.0-1.el8.1.x86_64.rpm >> $RPM_LOG 2>&1
+                        rpm -Uvh ${g_path}/rpms/centos/tcpdump/libpcap-1.9.1-5.el8.x86_64.rpm >> $RPM_LOG 2>&1
                         rpm -Uvh ${g_path}/rpms/centos/tcpdump/tcpdump-4.9.3-3.el8_9.1.x86_64.rpm >> $RPM_LOG 2>&1
                     fi
                 elif [ $OS_TYPE == 4 ]
