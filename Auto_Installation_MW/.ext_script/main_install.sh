@@ -1171,3 +1171,9 @@ function Uninstall_Db_Postgresql()
 
     Write_Log $FUNCNAME $LINENO "end"
 }
+
+function Not_Supported_function()
+{
+    local MSG="Not Supported Yet."
+    dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+}

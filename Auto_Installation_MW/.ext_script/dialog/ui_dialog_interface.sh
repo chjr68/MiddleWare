@@ -30,7 +30,7 @@ function Show_Menu()
     1 "Install Middleware" \
     2 "Show Version" \
     3 "Utils" \
-    4 "Securitty Setting" \
+    4 "Security Setting" \
     5 "Uninstall" \
     2> $OUTFILE
 
@@ -60,9 +60,11 @@ function Show_Menu()
             ;;
         3)
             #Utils
+            Not_Supported_function
             ;;
         4)
             #Security Setting
+            Not_Supported_function
             ;;
         5) 
             #UnInstall MiddleWare
