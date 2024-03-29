@@ -236,7 +236,7 @@ function Select_Apache_Version()
         local MSG="Apache file does not exist."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
-        Show_Menu
+        exit
     else
         for list in $mw_pwd
         do
@@ -280,7 +280,7 @@ function Select_Apr_Version()
         local MSG="Apr file does not exist."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
-        Show_Menu
+        exit
     else
         for list in $module_pwd
         do
@@ -322,7 +322,7 @@ function Select_AprUtil_Version()
         local MSG="Apr-Util file does not exist."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
-        Show_Menu
+        exit
     else
         for list in $module_pwd
         do
@@ -364,7 +364,7 @@ function Select_Pcre_Version()
         local MSG="Pcre file does not exist."
         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
-        Show_Menu
+        exit
     else
         for list in $module_pwd
         do
@@ -407,8 +407,13 @@ function Select_Was_Version()
 
     \cp -f /dev/null $TMPFILE
 
-    if [ `echo $mw_pwd | wc -w` -gt 0 ]
+    if [ `echo $mw_pwd | wc -w` -eq 0 ]
     then
+        local MSG="Tomcat file does not exist."
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        exit
+    else
         for list in $mw_pwd
         do
             echo "$number $list"  >> $TMPFILE
@@ -459,8 +464,13 @@ function Select_Db_Version()
 
     \cp -f /dev/null $TMPFILE
 
-    if [ `echo $mw_pwd | wc -w` -gt 0 ]
+    if [ `echo $mw_pwd | wc -w` -eq 0 ]
     then
+        local MSG="DB file does not exist."
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        exit
+    else
         for list in $mw_pwd
         do
             echo "$number $list"  >> $TMPFILE

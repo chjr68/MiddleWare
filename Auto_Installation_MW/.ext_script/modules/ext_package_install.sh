@@ -65,12 +65,14 @@ function Delete_Directory()
     #rm -rf ${g_path}/rpms
 
     # module 압축 해제 디렉토리 삭제
-    find ${g_path}/package/1.WEB/. -type d | xargs rm -rf > /dev/null 2>&1
-    find ${g_path}/package/module/. -type d | xargs rm -rf > /dev/null 2>&1
-    find ${g_path}/package/2.WAS/. -type d | xargs rm -rf > /dev/null 2>&1
-    find ${g_path}/package/3.DB/MariaDB/. -type d | xargs rm -rf > /dev/null 2>&1
-    find ${g_path}/package/3.DB/MySQL/. -type d | xargs rm -rf > /dev/null 2>&1
-    find ${g_path}/package/3.DB/PostgreSQL/. -type d | xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/1.WEB/. -type d -name ${MW_WEB_VERSION} | xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/module/. -type d -name ${APR_VERSION} | xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/module/. -type d -name ${APR_UTIL_VERSION} | xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/module/. -type d -name ${PCRE_VERSION}| xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/2.WAS/. -type d -name ${MW_WAS_VERSION} | xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/3.DB/MariaDB/. -type d -name ${MW_DB_VERSION} | xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/3.DB/MySQL/. -type d -name ${MW_DB_VERSION} | xargs rm -rf > /dev/null 2>&1
+    find ${g_path}/package/3.DB/PostgreSQL/. -type d -name ${MW_DB_VERSION} | xargs rm -rf > /dev/null 2>&1
 
     Write_Log $FUNCNAME $LINENO "end"
 }
