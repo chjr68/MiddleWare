@@ -19,7 +19,7 @@
 1. <strong>Auto_Installation_MW_V1.X.tar.gz 파일 서버에 업로드</strong> <br>
     WinSCP / FileZilla 등 프로그램 사용
 2. <strong>파일 압축 해제</strong> <br>
-    <img src="https://github.com/chjr68/MiddleWare/tree/main/ETC/images/2.file_list.png"> <br>
+    <img src="https://github.com/chjr68/MiddleWare/tree/main/ETC/images/2.file_list"> <br>
     \# tar xvf Auto_Installation_MW_V1.X.tar.gz
 3. <strong>InstallMW 스크립트 실행</strong> <br>
     \# ./InstallMW
