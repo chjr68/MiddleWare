@@ -22,6 +22,7 @@ OUTFILE='/tmp/.install.out'
 VERSION='/tmp/.version.out'
 
 INSTALL_PATH=/usr/local/src
+INSTALL_VERSION="${OPT_NONE}"
 
 PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
 
@@ -47,6 +48,9 @@ MENU_OPT_MW_TYPE=${OPT_NONE} # 1:WEB, 2:WAS, 3:DB, ${OPT_NONE} : DIALOG
 MENU_OPT_WEB_TYPE=${OPT_NONE} # 1:Apache, ${OPT_NONE} : DIALOG
 MENU_OPT_WAS_TYPE=${OPT_NONE} # 1:Tomcat, ${OPT_NONE} : DIALOG
 MENU_OPT_DB_TYPE=${OPT_NONE} # 1:MariaDB, 2:MySQL, 3:PostgreSQL, ${OPT_NONE} : DIALOG
+
+# 설치 방법 선택
+MENU_OPT_INSTALL_TYPE=${OPT_NONE} # 1.다운된 패키지로 설치, 2. 버전 입력받아서 wget으로 패키지 다운로드 후 설치
 
 # OS 타입 #1: CentOS / 2: Ubuntu / 3: RockyOS / 4:Amazon Linux
 # TODO: rpm 설치 확인해보고 RHEL / Debian 계열 2개로 나누기 1/2

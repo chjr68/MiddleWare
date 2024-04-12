@@ -25,7 +25,7 @@ function Install_Middleware()
     Write_Log $FUNCNAME $LINENO "start"
 
     #이미 설치가 되어 있는지 체크
-    Chk_Dir_Exist
+    Check_Dir_Exist
 
     case $MENU_OPT_MW_TYPE in
         1)
@@ -56,7 +56,7 @@ function Install_Middleware()
     Write_Log $FUNCNAME $LINENO "end"
 }
 
-function Chk_Dir_Exist()
+function Check_Dir_Exist()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
@@ -1171,6 +1171,58 @@ function Uninstall_Db_Postgresql()
 
     Write_Log $FUNCNAME $LINENO "end"
 }
+
+function Check_Wget_Install_Version
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    # 버전 분류
+    major=$(echo ${INSTALL_VERSION} | cut -d'.' -f1)
+    minor=$(echo ${INSTALL_VERSION} | cut -d'.' -f2)
+    patch=$(echo ${INSTALL_VERSION} | cut -d'.' -f3)
+
+    # WEB
+    case $MENU_OPT_MW_TYPE in
+    1)
+        if [ $MENU_OPT_WEB_TYPE == 1 ]
+        then 
+            MW_WEB_VERSION=httpd-${INSTALL_VERSION}
+            wget -NP ${g_path}/package/1.WEB/ http://archive.apache.org/dist/httpd/${MW_WEB_VERSION}.tar.gz > /dev/null 2>&1
+        fi
+        ;;
+    # WAS
+    2)
+        if [ $MENU_OPT_WAS_TYPE == 1 ]
+        then
+            MW_WAS_VERSION=apache-tomcat-${INSTALL_VERSION}
+            wget -NP ${g_path}/package/2.WAS/ https://archive.apache.org/dist/tomcat/tomcat-${major}/v${INSTALL_VERSION}/bin/${MW_WAS_VERSION}.tar.gz > /dev/null 2>&1
+        fi
+        ;;
+    # DB
+    3)
+        if [ $MENU_OPT_DB_TYPE == 1 ]
+        then
+            MW_DB_VERSION=mariadb-${INSTALL_VERSION}
+            wget -NP ${g_path}/package/3.DB/MariaDB https://downloads.mariadb.com/MariaDB/${MW_DB_VERSION}/bintar-linux-systemd-x86_64/${MW_DB_VERSION}-linux-systemd-x86_64.tar.gz > /dev/null 2>&1
+        elif [ $MENU_OPT_DB_TYPE == 2 ]
+        then
+            MW_DB_VERSION=mysql-${INSTALL_VERSION}
+            wget -NP ${g_path}/package/3.DB/MySQL https://downloads.mysql.com/archives/get/p/23/file/${MW_DB_VERSION}-el7-x86_64.tar.gz > /dev/null 2>&1
+        elif [ $MENU_OPT_DB_TYPE == 3 ]
+        then
+            MW_DB_VERSION=postgresql-${INSTALL_VERSION}
+            wget -NP ${g_path}/package/3.DB/PostgreSQL https://www.postgresql.org/ftp/source/v${INSTALL_VERSION}/${MW_DB_VERSION}.tar.gz > /dev/null 2>&1
+        fi
+        ;;
+    esac
+
+
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+
+
 
 function Not_Supported_function()
 {

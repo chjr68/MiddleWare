@@ -47,7 +47,7 @@ function Show_Menu()
             #타입 별 버전 선택 
             #Proto: package 디렉토리에 tar.gz파일 업로드 후 동작확인
             #TODO: 버전값을 불러와서 파일을 받아온 뒤 해당 버전 설치
-            Select_Middleware_Version
+            Show_Install_Type_Menu
 
             #설치 경로 다이얼로그, 경로를 선택하고, INSTALL_PATH를 다시 업데이트 한다.
             Input_Middleware_Install_Path
@@ -174,6 +174,34 @@ function Show_Db_Type_Menu
         ;;
     3)
         MENU_OPT_DB_TYPE="3"
+        ;;
+    *)
+        exit
+        ;;
+    esac
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Show_Install_Type_Menu
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --menu "Select Install Type" 10 50 0 \
+    1 Package \
+    2 Wget \
+    2> $OUTFILE
+
+    item=$(<${OUTFILE})
+    case $item in
+    1)
+        MENU_OPT_INSTALL_TYPE="1"
+        Select_Middleware_Version
+        ;;
+    2)
+        MENU_OPT_INSTALL_TYPE="2"
+        Input_Middleware_Version
+        Check_Wget_Install_Version
         ;;
     *)
         exit
@@ -451,7 +479,8 @@ function Select_Db_Version()
             #mw_pwd: 파일위치 절대경로 확인 필요
             #DB db 파일 포맷: mariadb-숫자.숫자.숫자
             #DB type 별 파일 포맷 확인 및 조치 필요
-            local mw_pwd=`find $g_path/package/3.DB/MariaDB -maxdepth 1 | grep tar.gz | grep -Eo 'mariadb-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`            ;;
+            local mw_pwd=`find $g_path/package/3.DB/MariaDB -maxdepth 1 | grep tar.gz | grep -Eo 'mariadb-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`            
+            ;;
         2) 
             #MySQL 파일 포맷:
             local mw_pwd=`find $g_path/package/3.DB/MySQL -maxdepth 1 | grep tar.gz | grep -Eo 'mysql-[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | sort -k1r`
@@ -504,7 +533,6 @@ function Input_Middleware_Install_Path()
     local dialog_message="Please Enter Middleware Install Path \n\
     ex) ${INSTALL_PATH}\n"  
 
-    #TODO: BACKTITLE 중괄호로 안감싸도되나?
     dialog --title "${TITLE}" --backtitle "$BACKTITLE" --inputbox "${dialog_message}" 9 70 "${INSTALL_PATH}" 2> $OUTFILE
 
     answer=$?
@@ -512,6 +540,29 @@ function Input_Middleware_Install_Path()
         0)
             #선택한 경로로 업데이트
             INSTALL_PATH=$(<${OUTFILE})
+            ;;
+        1)
+            exit
+            ;;
+    esac
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Input_Middleware_Version()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    local dialog_message="Please Enter Middleware Version \n\
+    ex) 10.2.1\n"  
+
+    dialog --title "${TITLE}" --backtitle "$BACKTITLE" --inputbox "${dialog_message}" 9 70 "${INSTALL_VERSION}" 2> $OUTFILE
+
+    answer=$?
+    case $answer in
+        0)
+            #선택한 버전으로 업데이트
+            INSTALL_VERSION=$(<${OUTFILE})
             ;;
         1)
             exit
