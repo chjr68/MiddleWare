@@ -19,17 +19,17 @@
 1. <strong>Auto_Installation_MW_V1.X.tar.gz 파일 서버에 업로드</strong> <br>
     WinSCP / FileZilla 등 프로그램 사용
 2. <strong>파일 압축 해제</strong> <br>
-    <img src="https://github.com/chjr68/MiddleWare/tree/main/ETC/images/2.file_list"> <br>
+    <img src="ETC/images/2.file_list"> <br>
     \# tar xvf Auto_Installation_MW_V1.X.tar.gz
 3. <strong>InstallMW 스크립트 실행</strong> <br>
     \# ./InstallMW
 4. <strong>(최초 1회) 필수 라이브러리/자주 사용되는 명령어 설치</strong> <br>
-    <img src="https://github.com/chjr68/MiddleWare/tree/main/ETC/images/4.first_execute"> <br>
+    <img src="ETC/images/4.first_execute"> <br>
     자주 사용되는 명령어 설치 (tcpdump, sshpass, net-tools, wget) <br>
     미들웨어 필수 라이브러리 설치 (gcc, make, expat, java, python 등)
 
 5. <strong>메뉴 선택</strong> <br>
-    <img src="https://github.com/chjr68/MiddleWare/tree/main/ETC/images/5.menu_list"> <br>
+    <img src="ETC/images/5.menu_list"> <br>
     1) Install Middleware: 미들웨어 설치 <br>
     2) Show Version: 설치된 미들웨어 버전 정보 확인 <br>
     3) Utils (추후): mod.jk 연동 등 <br>
@@ -37,17 +37,17 @@
     5) Uninstall: 설치된 미들웨어 삭제 <br>
 
 6. <strong>설치 타입 선택</strong> <br>
-    <img src="https://github.com/chjr68/MiddleWare/tree/main/ETC/images/6.install_type"> <br>
+    <img src="ETC/images/6.install_type"> <br>
     1) Package: 지정된 경로에 업로드된 패키지를 사용해 설치(폐쇄망)
         <details>
         <summary><strong>※ Package 업로드 시, 지원형식에 유의</strong></summary>
-        <img src="https://github.com/chjr68/MiddleWare/tree/main/ETC/images/6.file_format">
+        <img src="ETC/images/6.file_format">
         </details>
     2) Wget: 사용자에게 버전입력을 받아 wget으로 파일 다운로드 후 자동 설치(온라인)
 7. <strong>설치</strong> <br>
-    <img src="https://github.com/chjr68/MiddleWare/tree/main/ETC/images/7.menu_install_procedure"> <br>
+    <img src="ETC/images/7.menu_install_procedure"> <br>
 8. <strong>확인</strong> <br>
-    <img src="https://github.com/chjr68/MiddleWare/tree/main/ETC/images/8.install_check">
+    <img src="ETC/images/8.install_check">
 </details>
 
 ## <strong>2.2. 가이드</strong> 
