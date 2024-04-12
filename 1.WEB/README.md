@@ -57,7 +57,7 @@ Apache Portable Runtime, 고급 IO 기능/기본 프로세스 처리 기능 등 
 
 - pcre 설치 <br>
 \# cd /usr/local/src/pcre-8.45/ <br>
-\# ./configure --prefix=/usr/local/src/pcre-8.45/ <bre>
+\# ./configure --prefix=/usr/local/src/pcre-8.45/ <br>
 \# make && make install
 
 - apr/apr-util 설치 <br>
@@ -66,7 +66,7 @@ Apache Portable Runtime, 고급 IO 기능/기본 프로세스 처리 기능 등 
 \# make && make install 
 &nbsp; <br><br>
 \# cd /usr/local/src/apr-util-1.6.3 <br>
-\# ./configure --prefix=/usr/local/src/apr-util --with-apr=/usr/local/src/apr-util <br>
+\# ./configure --prefix=/usr/local/src/apr-util --with-apr=/usr/local/src/apr <br>
 \# make && make install <br>
 
 - apache 설치 <br>
@@ -74,7 +74,7 @@ Apache Portable Runtime, 고급 IO 기능/기본 프로세스 처리 기능 등 
 --enable-module=so --enable-rewrite --enable-so \\ <br>
 --with-apr=/usr/local/src/apr \\ <br>
 --with-apr-util=/usr/local/src/apr-util \\ <br>
---with-pcre=/usr/local/src/pcre-8.45/pcre-config \\ <br>
+--with-pcre=/usr/local/src/pcre-8.45/bin/pcre-config \\ <br>
 --enable-mods-shared=all <br>
 \# make && make install
 

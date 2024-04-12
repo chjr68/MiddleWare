@@ -34,7 +34,7 @@ Tomcat 수동 설치 가이드를 기술합니다.
 ## 3. 패키지 다운로드
 ※ 버전 다를 경우, 아래 경로 수정 후 입력
 
-- Apache 다운로드 <br>
+- Tomcat 다운로드 <br>
 \# wget `https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.92/bin/apache-tomcat-8.5.92.tar.gz`
 
 ## 4. 설치
