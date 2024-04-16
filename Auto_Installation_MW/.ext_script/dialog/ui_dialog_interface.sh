@@ -200,6 +200,8 @@ function Show_Install_Type_Menu
         ;;
     2)
         MENU_OPT_INSTALL_TYPE="2"
+        Check_Internet_Status
+
         Input_Middleware_Version
         Check_Wget_Install_Version
         ;;
@@ -553,21 +555,29 @@ function Input_Middleware_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    local dialog_message="Please Enter Middleware Version \n\
-    ex) 10.2.1\n"  
+    if [ $INTERNET_STATUS == 1 ]
+    then
+        local dialog_message="Please Enter Middleware Version\
+        \nex) 10.2.1"  
 
-    dialog --title "${TITLE}" --backtitle "$BACKTITLE" --inputbox "${dialog_message}" 9 70 "${INSTALL_VERSION}" 2> $OUTFILE
+        dialog --title "${TITLE}" --backtitle "$BACKTITLE" --inputbox "${dialog_message}" 9 70 "${INSTALL_VERSION}" 2> $OUTFILE
 
-    answer=$?
-    case $answer in
-        0)
-            #선택한 버전으로 업데이트
-            INSTALL_VERSION=$(<${OUTFILE})
-            ;;
-        1)
-            exit
-            ;;
-    esac
+        answer=$?
+        case $answer in
+            0)
+                #선택한 버전으로 업데이트
+                INSTALL_VERSION=$(<${OUTFILE})
+                ;;
+            1)
+                exit
+                ;;
+        esac
+    else
+        local MSG="Internet Connection is required."
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        exit
+    fi
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -646,4 +656,10 @@ function Uninstall_Db()
     esac
 
     Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Not_Supported_function()
+{
+    local MSG="Not Supported Yet."
+    dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 }

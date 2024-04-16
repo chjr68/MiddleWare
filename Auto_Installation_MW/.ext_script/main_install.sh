@@ -48,11 +48,6 @@ function Install_Middleware()
 
     source /etc/profile
 
-    local MSG="Installation finished.\
-    \nTerminate menu"
-
-    dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
-
     Write_Log $FUNCNAME $LINENO "end"
 }
 
@@ -346,9 +341,20 @@ WantedBy=multi-user.target" > /etc/systemd/system/httpd.service
     systemctl enable httpd >> ${g_path}/trace_log/apache.log 2>&1
     systemctl restart httpd
 
-    echo $MW_WEB_VERSION $INSTALL_PATH >> $VERSION
+    if [ `systemctl is-active httpd` == "active" ]
+    then
+        echo $MW_WEB_VERSION $INSTALL_PATH >> $VERSION
 
-    Write_Log $FUNCNAME $LINENO "end"
+        local MSG="Installation Finished\
+        \nTerminate menu"
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        Write_Log $FUNCNAME $LINENO "end"
+    else
+        local MSG="Installation is Failed\
+        \nTerminate menu"
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+    fi
 }
 
 function Install_Was()
@@ -438,10 +444,21 @@ WantedBy=multi-user.target" > /etc/systemd/system/tomcat.service
     systemctl enable tomcat > /dev/null 2>&1
     systemctl restart tomcat
     
-    echo $JAVA_VERSION >> $VERSION
-    echo $MW_WAS_VERSION $INSTALL_PATH >> $VERSION
+    if [ `systemctl is-active tomcat` == "active" ]
+    then
+        echo $MW_WAS_VERSION $INSTALL_PATH >> $VERSION
+        echo $JAVA_VERSION >> $VERSION
 
-    Write_Log $FUNCNAME $LINENO "end"
+        local MSG="Installation Finished\
+        \nTerminate menu"
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        Write_Log $FUNCNAME $LINENO "end"
+    else
+        local MSG="Installation Failed\
+        \nTerminate menu"
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+    fi
 }
 
 function Install_Db()
@@ -629,9 +646,20 @@ log-bin                         = /data/mariadb/log-bin/mysql-bin" > /etc/my.cnf
     systemctl enable mariadb > /dev/null 2>&1
     systemctl start mariadb
 
-    echo $MW_DB_VERSION $INSTALL_PATH >> $VERSION
+    if [ `systemctl is-active mariadb` == "active" ]
+    then
+        echo $MW_DB_VERSION $INSTALL_PATH >> $VERSION
 
-    Write_Log $FUNCNAME $LINENO "end"
+        local MSG="Installation Finished\
+        \nTerminate menu"
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        Write_Log $FUNCNAME $LINENO "end"
+    else
+        local MSG="Installation Failed\
+        \nTerminate menu"
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+    fi
 }
 
 function Install_Mysql()
@@ -699,29 +727,6 @@ log-error=$INSTALL_PATH/$MW_DB_VERSION/log/mysql.log
 pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
 " > /etc/my.cnf
 
-    # #라이브러리 경로 설정
-    # if [ $OS_TYPE == 2 ]
-    # then
-    #     #libssl & libcrypto
-    #     if [ -z "`find /usr/lib -name libssl.so.10`" ] || [ -z "`find /usr/lib -name libcrypto.so.10`" ]
-    #     then  
-    #         dpkg -i ${g_path}/rpms/deb/apt/db/openssl/openssl-libs_1.0.2k-27_amd64.deb >> $RPM_LOG 2>&1
-
-    #         ln -s /usr/lib64/libssl.so.10 /usr/lib/x86_64-linux-gnu/libssl.so.10
-    #         ln -s /usr/lib64/libcrypto.so.10 /usr/lib/x86_64-linux-gnu/libcrypto.so.10
-    #         ln -s /usr/lib/x86_64-linux-gnu/libssl.so.10 /lib/x86_64-linux-gnu/libssl.so.10
-    #         ln -s /usr/lib/x86_64-linux-gnu/libcrypto.so.10 /lib/x86_64-linux-gnu/libcrypto.so.10
-    #     #libncurses
-    #     elif [ -z "`find /usr/lib -name libncurses.so.5`" ]
-    #     then            
-    #         ln -s /usr/lib/x86_64-linux-gnu/libncurses.so.6.3 /usr/lib/x86_64-linux-gnu/libncurses.so.5
-    #     #libtinfo
-    #     elif [ -z "`find /usr/lib -name libtinfo.so.5`" ]
-    #     then
-    #         ln -s /usr/lib/x86_64-linux-gnu/libtinfo.so.6.3 /usr/lib/x86_64-linux-gnu/libtinfo.so.5
-    #     fi
-    # fi
-
     if [ $OS_TYPE == 2 ]
     then
         #libssl
@@ -768,7 +773,6 @@ pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
         fi
     fi
 
-
     #db 설치
     cd ${INSTALL_PATH}/${MW_DB_VERSION}/bin
     ./mysqld --initialize --user=mysql > /data/mysql/.passwd 2>&1
@@ -795,17 +799,24 @@ pid-file=$INSTALL_PATH/$MW_DB_VERSION/mysql.pid
     systemctl enable mysql > /dev/null 2>&1
     systemctl start mysql
 
-    echo $MW_DB_VERSION $INSTALL_PATH >> $VERSION
+    if [ `systemctl is-active mysql` == "active" ]
+    then
+        echo $MW_DB_VERSION $INSTALL_PATH >> $VERSION
 
-    # #mysql root password 변경, /data/mysql/.passwd 파일 읽어서 초기 패스워드 사용해야 됨
-    # mysql -uroot -p'초기패스워드' -e "alter user 'root'@'localhost' identified by 'Sniper13@$';"
+        local MSG="Installation Finished\
+        \nTerminate menu"
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
-    local MSG="Please Remember Initial Password Path\
-    \n/data/mysql/.passwd"
+        local MSG="Please Remember Initial Password Path\
+        \n/data/mysql/.passwd"
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
-    dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
-
-    Write_Log $FUNCNAME $LINENO "end"
+        Write_Log $FUNCNAME $LINENO "end"
+    else
+        local MSG="Installation Failed\
+        \nTerminate menu"
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+    fi
 }
 
 #TODO: Postgresql 설치방법 가이드북 작성 및 코드 작성
@@ -908,9 +919,20 @@ WantedBy=multi-user.target" > /etc/systemd/system/postgres.service
     #
     # psql -U postgres 
 
-    echo $MW_DB_VERSION $INSTALL_PATH >> $VERSION
+    if [ `systemctl is-active postgres` == "active" ]
+    then
+        echo $MW_DB_VERSION $INSTALL_PATH >> $VERSION
 
-    Write_Log $FUNCNAME $LINENO "end"
+        local MSG="Installation Finished\
+        \nTerminate menu"
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        Write_Log $FUNCNAME $LINENO "end"
+    else
+        local MSG="Installation Failed\
+        \nTerminate menu"
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+    fi
 }
 
 function Uninstall_Web_Apache()
@@ -1105,6 +1127,8 @@ function Uninstall_Db_Mysql()
         rm -rf /tmp/mysql.sock
         rm -rf /etc/init.d/mysql
         rm -rf /etc/my.cnf
+        rm -rf /etc/systemd/system/mysql.service
+        rm -rf /etc/systemd/system/mysqld.service
 
         rm -rf ${INSTALL_PATH}
         rm -rf /data
@@ -1187,7 +1211,17 @@ function Check_Wget_Install_Version
         if [ $MENU_OPT_WEB_TYPE == 1 ]
         then 
             MW_WEB_VERSION=httpd-${INSTALL_VERSION}
-            wget -NP ${g_path}/package/1.WEB/ http://archive.apache.org/dist/httpd/${MW_WEB_VERSION}.tar.gz > /dev/null 2>&1
+            URL=http://archive.apache.org/dist/httpd/${MW_WEB_VERSION}.tar.gz
+            Check_Wget_Version_Exist $URL
+
+            if [ $WGET_STATUS == 1 ]
+            then
+                wget -NP ${g_path}/package/1.WEB/ ${URL} > /dev/null 2>&1
+            elif [ $WGET_STATUS == 0 ]
+            then
+                local MSG="${MW_WEB_VERSION} file does not exist."
+                dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+            fi
         fi
         ;;
     # WAS
@@ -1195,7 +1229,18 @@ function Check_Wget_Install_Version
         if [ $MENU_OPT_WAS_TYPE == 1 ]
         then
             MW_WAS_VERSION=apache-tomcat-${INSTALL_VERSION}
-            wget -NP ${g_path}/package/2.WAS/ https://archive.apache.org/dist/tomcat/tomcat-${major}/v${INSTALL_VERSION}/bin/${MW_WAS_VERSION}.tar.gz > /dev/null 2>&1
+            URL=https://archive.apache.org/dist/tomcat/tomcat-${major}/v${INSTALL_VERSION}/bin/${MW_WAS_VERSION}.tar.gz
+            Check_Wget_Version_Exist $URL
+
+            if [ $WGET_STATUS == 1 ]
+            then
+                wget -NP ${g_path}/package/2.WAS/ ${URL} > /dev/null 2>&1
+            elif [ $WGET_STATUS == 0 ]
+            then
+                local MSG="${MW_WAS_VERSION} file does not exist.\
+                \nPlease Check Available Version"
+                dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+            fi
         fi
         ;;
     # DB
@@ -1203,29 +1248,89 @@ function Check_Wget_Install_Version
         if [ $MENU_OPT_DB_TYPE == 1 ]
         then
             MW_DB_VERSION=mariadb-${INSTALL_VERSION}
-            wget -NP ${g_path}/package/3.DB/MariaDB https://downloads.mariadb.com/MariaDB/${MW_DB_VERSION}/bintar-linux-systemd-x86_64/${MW_DB_VERSION}-linux-systemd-x86_64.tar.gz > /dev/null 2>&1
+            URL=https://downloads.mariadb.com/MariaDB/${MW_DB_VERSION}/bintar-linux-systemd-x86_64/${MW_DB_VERSION}-linux-systemd-x86_64.tar.gz
+            Check_Wget_Version_Exist $URL
+
+            if [ $WGET_STATUS == 1 ]
+            then
+                wget -NP ${g_path}/package/3.DB/MariaDB/ ${URL} > /dev/null 2>&1
+            elif [ $WGET_STATUS == 0 ]
+            then
+                local MSG="${MW_DB_VERSION} file does not exist.\
+                \nPlease Check Available Version"
+                dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+            fi
         elif [ $MENU_OPT_DB_TYPE == 2 ]
         then
             MW_DB_VERSION=mysql-${INSTALL_VERSION}
-            wget -NP ${g_path}/package/3.DB/MySQL https://downloads.mysql.com/archives/get/p/23/file/${MW_DB_VERSION}-el7-x86_64.tar.gz > /dev/null 2>&1
+            URL=https://downloads.mysql.com/archives/get/p/23/file/${MW_DB_VERSION}-el7-x86_64.tar.gz
+            Check_Wget_Version_Exist $URL
+
+            if [ $WGET_STATUS == 1 ]
+            then
+                wget -NP ${g_path}/package/3.DB/MySQL/ ${URL} > /dev/null 2>&1
+            elif [ $WGET_STATUS == 0 ]
+            then
+                local MSG="${MW_DB_VERSION} file does not exist.\
+                \nPlease Check Available Version"
+                dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+            fi
         elif [ $MENU_OPT_DB_TYPE == 3 ]
         then
             MW_DB_VERSION=postgresql-${INSTALL_VERSION}
-            wget -NP ${g_path}/package/3.DB/PostgreSQL https://www.postgresql.org/ftp/source/v${INSTALL_VERSION}/${MW_DB_VERSION}.tar.gz > /dev/null 2>&1
+            URL=https://ftp.postgresql.org/pub/source/v${INSTALL_VERSION}/${MW_DB_VERSION}.tar.gz
+            Check_Wget_Version_Exist $URL
+
+            if [ $WGET_STATUS == 1 ]
+            then
+                wget -NP ${g_path}/package/3.DB/PostgreSQL/ ${URL} > /dev/null 2>&1
+            elif [ $WGET_STATUS == 0 ]
+            then
+                local MSG="${MW_DB_VERSION} file does not exist.\
+                \nPlease Check Available Version"
+                dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+            fi
         fi
         ;;
     esac
 
-
+    #wget 버전 미 지원 시, 버전 재 입력
+    if [ $WGET_STATUS == 0 ]
+    then
+        Input_Middleware_Version
+        Check_Wget_Install_Version
+    fi
 
     Write_Log $FUNCNAME $LINENO "end"
 }
 
-
-
-
-function Not_Supported_function()
+function Check_Internet_Status
 {
-    local MSG="Not Supported Yet."
-    dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+    Write_Log $FUNCNAME $LINENO "start"
+
+    ping -c 1 -w 1 "8.8.8.8" &> /dev/null
+    if [ "$?" == "0" ] ; 
+    then
+        INTERNET_STATUS=1
+    else
+        INTERNET_STATUS=0
+    fi
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Check_Wget_Version_Exist
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    wget --spider $1 &> /dev/null
+    if [ "$?" == "0" ] ; 
+    then
+        WGET_STATUS=1
+    else
+        WGET_STATUS=0
+    fi
+
+
+    Write_Log $FUNCNAME $LINENO "end"
 }

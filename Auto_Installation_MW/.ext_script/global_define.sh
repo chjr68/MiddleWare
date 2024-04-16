@@ -68,3 +68,9 @@ JAVA_VERSION=${OPT_NONE}
 APR_VERSION=${OPT_NONE}
 APR_UTIL_VERSION=${OPT_NONE}
 PCRE_VERSION=${OPT_NONE}
+
+#인터넷 연결 상태 확인
+INTERNET_STATUS=${OPT_NONE} # 1: 인터넷 연결 됨, 0:인터넷 연결 안됨
+
+#wget 다운로드 가능 버전 유무 확인
+WGET_STATUS=${OPT_NONE} # 1: 버진 지원 됨, 0:버전 지원 안됨
