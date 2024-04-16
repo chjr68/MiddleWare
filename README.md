@@ -14,7 +14,7 @@
 
 ## <strong>2.1. 사용법</strong> 
 <details>
-<summary><strong>스크립트 사용방법</strong></summary>
+<summary><strong> <클릭> 스크립트 사용방법</strong></summary>
 
 1. <strong>Auto_Installation_MW_V1.X.tar.gz 파일 서버에 업로드</strong> <br>
     WinSCP / FileZilla 등 프로그램 사용
@@ -24,9 +24,9 @@
 3. <strong>InstallMW 스크립트 실행</strong> <br>
     \# ./InstallMW
 4. <strong>(최초 1회) 필수 라이브러리/자주 사용되는 명령어 설치</strong> <br>
-    <img src="./ETC/images/4.first_execute"> <br>
-    자주 사용되는 명령어 설치 (tcpdump, sshpass, net-tools, wget) <br>
-    미들웨어 필수 라이브러리 설치 (gcc, make, expat, java, python 등)
+    <img src="./ETC/images/4.first_execute.png"> <br>
+    - 자주 사용되는 명령어 설치 (tcpdump, sshpass, net-tools, wget) <br>
+    - 미들웨어 필수 라이브러리 설치 (gcc, make, expat, java, python 등)
 
 5. <strong>메뉴 선택</strong> <br>
     <img src="./ETC/images/5.menu_list.png"> <br>
@@ -40,10 +40,10 @@
     <img src="./ETC/images/6.install_type.png"> <br>
     1) Package: 지정된 경로에 업로드된 패키지를 사용해 설치(폐쇄망)
         <details>
-        <summary><strong>※ Package 업로드 시, 지원형식에 유의</strong></summary>
+        <summary><strong> <클릭> ※ Package 업로드 시, 지원형식에 유의 </strong></summary>
         <img src="./ETC/images/6.file_format.png">
         </details>
-    2) Wget: 사용자에게 버전입력을 받아 wget으로 파일 다운로드 후 자동 설치(온라인)
+    2) Wget: 사용자에게 버전입력을 받아 wget으로 파일 다운로드 후 자동 설치(인터넷망)
 7. <strong>설치</strong> <br>
     <img src="./ETC/images/7.menu_install_procedure.png"> <br>
 8. <strong>확인</strong> <br>
@@ -84,7 +84,7 @@ PostgreSQL: postgres / postgres
 
 ## <strong>2.3. 예상 구현 기능</strong>
 - 다이얼로그 기반 자동 설치 스크립트(GUI)
-- 사용자가 패키지 다운로드 및 저장위치에 업로드하여 기본 패키지 버전 선택 <br>
+- 사용자가 패키지 다운로드 및 저장위치에 업로드(폐쇄망) / 다운로드(인터넷망) 하여 기본 패키지 버전 선택 <br>
 ※ 버전 별 호환성까지 검증하진 않음.
 - Install / Uninstall / Config / Log Level / 설치 경로 입력 / 취약점(추후) 고려
 ## <strong>2.4. 패키지  (23년 12월 기준)</strong>
@@ -111,16 +111,16 @@ PostgreSQL: postgres / postgres
 \- Ubuntu 22.04<br>
 \- RockyOS 8
 
-2. Progress Bar <br>
+2. <del>Progress Bar (완료)</del> <br>
 \- 좀 더 가시성 있게 진행률 체크할 수 있는 방법 검토 <br>
 \- 빌드 > 컴파일 > 설치 과정을 볼 수 있게 <br>
 \- 단순히 설치만 하는 DB는 임시로 50%로 넘어가게 하드코딩 <br>
 (db설치 스크립트 파일마다 함수를 만들어서 진행률에 반영할 수 있지만 비효율적으로 보임)
 
-3. 파일 다운로드 자동화 <br>
+3. <del>파일 다운로드 자동화 (완료)</del> <br>
 \- wget 활용하여 파일 다운로드 자동화 <br>
 \- (기존) 패키지 다운로드 후 지정된 경로에 업로드하여 설치 <br>
-\- (추가) Install Type을 추가하여 기존 업로드 설치 기능 외 wget 옵션 제공 <br>
+\- (추가) Install Type을 추가하여 기존 Package(업로드 설치) 기능 외 Wget 옵션 제공 <br>
 
 4. 취약점 조치 (추후) <br>
 \- MiddleWare 기본 취약점 조치
