@@ -24,24 +24,17 @@ function Install_Middleware()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    #이미 설치가 되어 있는지 체크
-    Check_Dir_Exist
+    #디렉토리 생성 전, 파일 유무/생성 여부 확인 후 만들어야 됨
+    Make_Dir
 
     case $MENU_OPT_MW_TYPE in
         1)
-            #디렉토리 생성 전, 파일 유무/생성 여부 확인 후 만들어야 됨
-            Make_Dir
-
             Install_Web
             ;;
         2)
-            Make_Dir
-
             Install_Was
             ;;
         3)
-            Make_Dir
-
             Install_Db
             ;;   
     esac
@@ -82,6 +75,8 @@ function Make_Dir()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
+    #if 구문으로 디렉토리 존재유무 확인 후 생성
+
     #설치 디렉토리 생성
     mkdir -p ${INSTALL_PATH} # 제일 먼저 만들어야 함
     echo "PATH=${INSTALL_PATH}" >> $TMPFILE
@@ -93,7 +88,7 @@ function Make_Dir()
 #      config파일 수정 시, 특정 라인찾아서 아래 넣기
 #      추가 파일 생성
 #      미들웨어 버전 별 모듈 버전(apr, pcre 등)까지 맞출 수 없으니, 사용자가 다운로드 후 디렉토리에 업로드 하는 형식으로 우선진행
-#      apr, pcre는 하드코딩해서 버전 픽스
+#      apr, pcre는 하드코딩해서 버전 픽스 -> 이 부분도 설치 자유도를 위해 업로드 파일 선택하게끔 개선(완료)
 
 #TODO: 설치되는 파일리스트, 컴파일 메세지 출력되지 않도록 처리.(완료)
 #      Dialog Progress bar만 보이도록
@@ -1222,6 +1217,44 @@ function Check_Wget_Install_Version
                 local MSG="${MW_WEB_VERSION} file does not exist."
                 dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
             fi
+
+            #모듈 3개를 for문으로 반복하여 수행
+            for module in $MODULELIST
+            do
+                if [ "$module" == "apr" ]
+                then
+                    URL=https://dlcdn.apache.org/apr/${APR_VERSION}.tar.gz
+                    Check_Wget_Version_Exist $URL
+                elif [ "$module" == "apr-util" ]
+                then
+                    URL=https://dlcdn.apache.org/apr/${APR_UTIL_VERSION}.tar.gz
+                    Check_Wget_Version_Exist $URL
+                elif [ "$module" == "pcre" ]
+                then
+                    URL=https://sourceforge.net/projects/pcre/files/pcre/${MODULE_VERSION}/${PCRE_VERSION}.tar.gz/download
+                    Check_Wget_Version_Exist $URL
+                fi
+                
+                if [ $WGET_STATUS == 1 ]
+                then
+                    wget -NP ${g_path}/package/module/ ${URL} > /dev/null 2>&1
+                elif [ $WGET_STATUS == 0 ]
+                then
+                    if [ "$moudle" == "apr" ]
+                    then
+                        local MSG="${APR_VERSION} file does not exist."
+                        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+                    elif [ "$moudle" == "apr-util" ]
+                    then
+                        local MSG="${APR_UTIL_VERSION} file does not exist."
+                        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+                    elif [ "$moudle" == "pcre" ]
+                    then
+                        local MSG="${PCRE_VERSION} file does not exist."
+                        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+                    fi
+                fi
+            done
         fi
         ;;
     # WAS
@@ -1330,7 +1363,6 @@ function Check_Wget_Version_Exist
     else
         WGET_STATUS=0
     fi
-
 
     Write_Log $FUNCNAME $LINENO "end"
 }

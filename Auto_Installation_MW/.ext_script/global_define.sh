@@ -23,6 +23,7 @@ VERSION='/tmp/.version.out'
 
 INSTALL_PATH=/usr/local/src
 INSTALL_VERSION="${OPT_NONE}"
+MODULE_VERSION="${OPT_NONE}"
 
 PATH=/usr/local/sbin:/sbin:/bin:/usr/sbin:/usr/bin:/root/bin
 
@@ -33,6 +34,7 @@ OPT_NONE=-9999 #초기값
 ################################################ 설치, 제어 옵션
 
 CHKRPMLIST="dialog net-tools tcpdump sshpass wget lsof make gcc expat java libaio ncurses python3 readline-devel zlib-devel"
+MODULELIST="apr apr-util pcre"
 
 ################################################ DIALOG 관련
 

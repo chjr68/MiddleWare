@@ -46,7 +46,7 @@ function Show_Menu()
             
             #타입 별 버전 선택 
             #Proto: package 디렉토리에 tar.gz파일 업로드 후 동작확인
-            #TODO: 버전값을 불러와서 파일을 받아온 뒤 해당 버전 설치
+            #TODO: 버전값을 불러와서 파일을 받아온 뒤 해당 버전 설치(완료)
             Show_Install_Type_Menu
 
             #설치 경로 다이얼로그, 경로를 선택하고, INSTALL_PATH를 다시 업데이트 한다.
@@ -202,8 +202,15 @@ function Show_Install_Type_Menu
         MENU_OPT_INSTALL_TYPE="2"
         Check_Internet_Status
 
-        Input_Middleware_Version
-        Check_Wget_Install_Version
+        if [ $MENU_OPT_MW_TYPE == 1 ]
+        then
+            Input_Middleware_Version
+            Input_Module_Version
+            Check_Wget_Install_Version        
+        else
+            Input_Middleware_Version
+            Check_Wget_Install_Version
+        fi
         ;;
     *)
         exit
@@ -542,6 +549,9 @@ function Input_Middleware_Install_Path()
         0)
             #선택한 경로로 업데이트
             INSTALL_PATH=$(<${OUTFILE})
+
+            #이미 디렉토리가 있는지 체크
+            Check_Dir_Exist
             ;;
         1)
             exit
@@ -578,6 +588,52 @@ function Input_Middleware_Version()
 
         exit
     fi
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+function Input_Module_Version()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+    
+    for module in $MODULELIST
+    do
+        if [ $INTERNET_STATUS == 1 ]
+        then
+        local dialog_message="Please Enter $module Version\
+        \nex) 10.2.1"  
+
+        dialog --title "${TITLE}" --backtitle "$BACKTITLE" --inputbox "${dialog_message}" 9 70 "${MODULE_VERSION}" 2> $OUTFILE
+
+        answer=$?
+        case $answer in
+            0)
+                #선택한 버전으로 업데이트
+                if [ "$module" == "apr" ]
+                then
+                    APR_VERSION="apr-$(<${OUTFILE})"
+                elif [ "$module" == "apr-util" ]
+                then
+                    APR_UTIL_VERSION="apr-util-$(<${OUTFILE})"
+                elif [ "$module" == "pcre" ]
+                then
+                    MODULE_VERSION=$(<${OUTFILE})
+                    PCRE_VERSION="pcre-$(<${OUTFILE})"
+                fi
+                ;;
+            1)
+                exit
+                ;;
+        esac
+    else
+        local MSG="Internet Connection is required."
+        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+
+        exit
+    fi
+
+    done
+
 
     Write_Log $FUNCNAME $LINENO "end"
 }
