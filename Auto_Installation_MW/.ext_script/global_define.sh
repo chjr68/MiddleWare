@@ -54,7 +54,7 @@ MENU_OPT_DB_TYPE=${OPT_NONE} # 1:MariaDB, 2:MySQL, 3:PostgreSQL, ${OPT_NONE} : D
 # 설치 방법 선택
 MENU_OPT_INSTALL_TYPE=${OPT_NONE} # 1.다운된 패키지로 설치, 2. 버전 입력받아서 wget으로 패키지 다운로드 후 설치
 
-# OS 타입 #1: CentOS / 2: Ubuntu / 3: RockyOS / 4:Amazon Linux
+# OS 타입 #1: CentOS / 2: Ubuntu / 3: RockyOS / 4:Amazon Linux(미지원)
 # TODO: rpm 설치 확인해보고 RHEL / Debian 계열 2개로 나누기 1/2
 OS_TYPE=${OPT_NONE}
 
@@ -76,3 +76,6 @@ INTERNET_STATUS=${OPT_NONE} # 1: 인터넷 연결 됨, 0:인터넷 연결 안됨
 
 #wget 다운로드 가능 버전 유무 확인
 WGET_STATUS=${OPT_NONE} # 1: 버진 지원 됨, 0:버전 지원 안됨
+
+#module 제어값
+MODULE_STATUS=${OPT_NONE}

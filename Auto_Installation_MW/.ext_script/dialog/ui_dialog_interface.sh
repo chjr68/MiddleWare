@@ -35,7 +35,8 @@ function Show_Menu()
     2> $OUTFILE
 
     item=$(<${OUTFILE})
-
+    MENU_OPT_MAIN_INSTALL=$(<${OUTFILE})
+    
     case $item in
         1)
             #Middleware Install
@@ -74,8 +75,6 @@ function Show_Menu()
             exit
             ;;
     esac
-
-    MENU_OPT_MAIN_INSTALL=${OPT_NONE}
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -123,6 +122,7 @@ function Show_Web_Type_Menu
     item=$(<${OUTFILE})
     case $item in
     1)
+        Check_Middleware_Exist httpd
         MENU_OPT_WEB_TYPE="1"
         ;;
     *)
@@ -144,6 +144,7 @@ function Show_Was_Type_Menu
     item=$(<${OUTFILE})
     case $item in
     1)
+        Check_Middleware_Exist tomcat
         MENU_OPT_WAS_TYPE="1"
         ;;
     *)
@@ -167,12 +168,15 @@ function Show_Db_Type_Menu
     item=$(<${OUTFILE})
     case $item in
     1)
+        Check_Middleware_Exist mariadb
         MENU_OPT_DB_TYPE="1"
         ;;
     2)
+        Check_Middleware_Exist mysql
         MENU_OPT_DB_TYPE="2"
         ;;
     3)
+        Check_Middleware_Exist postgres
         MENU_OPT_DB_TYPE="3"
         ;;
     *)
@@ -206,7 +210,7 @@ function Show_Install_Type_Menu
         then
             Input_Middleware_Version
             Input_Module_Version
-            Check_Wget_Install_Version        
+            Check_Wget_Install_Version
         else
             Input_Middleware_Version
             Check_Wget_Install_Version
@@ -339,7 +343,7 @@ function Select_Apr_Version()
 
         item=$(<${OUTFILE})
 
-        APR_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
+        APR_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' ' | cut -f 2 -d'-'`
     fi
 
     Write_Log $FUNCNAME $LINENO "end"
@@ -381,7 +385,7 @@ function Select_AprUtil_Version()
 
         item=$(<${OUTFILE})
 
-        APR_UTIL_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
+        APR_UTIL_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' ' | cut -f 3 -d'-'`
     fi
 
     Write_Log $FUNCNAME $LINENO "end"
@@ -423,7 +427,7 @@ function Select_Pcre_Version()
 
         item=$(<${OUTFILE})
 
-        PCRE_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' '`
+        PCRE_VERSION=`sed -n -e "${item}"p /tmp/.install.tmp | cut -f 2 -d' ' | cut -f 2 -d'-'`
     fi
 
     Write_Log $FUNCNAME $LINENO "end"
@@ -600,40 +604,54 @@ function Input_Module_Version()
     do
         if [ $INTERNET_STATUS == 1 ]
         then
-        local dialog_message="Please Enter $module Version\
-        \nex) 10.2.1"  
+            local dialog_message="Please Enter $module Version\
+            \nex) 10.2.1"  
+            
+            #최초 실행이 아닌 경우 이전 입력값을 기억함
+            if [ ! $MODULE_STATUS == ${OPT_NONE} ]
+            then
+                case $module in
+                apr)
+                    MODULE_VERSION="$APR_VERSION"
+                    ;;
+                apr-util)
+                    MODULE_VERSION="$APR_UTIL_VERSION"
+                    ;;
+                pcre)
+                    MODULE_VERSION="$PCRE_VERSION"
+                    ;;
+            esac
+            fi
 
-        dialog --title "${TITLE}" --backtitle "$BACKTITLE" --inputbox "${dialog_message}" 9 70 "${MODULE_VERSION}" 2> $OUTFILE
+            dialog --title "${TITLE}" --backtitle "$BACKTITLE" --inputbox "${dialog_message}" 9 70 "${MODULE_VERSION}" 2> $OUTFILE
 
-        answer=$?
-        case $answer in
-            0)
-                #선택한 버전으로 업데이트
-                if [ "$module" == "apr" ]
-                then
-                    APR_VERSION="apr-$(<${OUTFILE})"
-                elif [ "$module" == "apr-util" ]
-                then
-                    APR_UTIL_VERSION="apr-util-$(<${OUTFILE})"
-                elif [ "$module" == "pcre" ]
-                then
-                    MODULE_VERSION=$(<${OUTFILE})
-                    PCRE_VERSION="pcre-$(<${OUTFILE})"
-                fi
-                ;;
-            1)
-                exit
-                ;;
-        esac
-    else
-        local MSG="Internet Connection is required."
-        dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
+            answer=$?
+            case $answer in
+                0)
+                    #선택한 버전으로 업데이트
+                    if [ "$module" == "apr" ]
+                    then
+                        APR_VERSION="$(<${OUTFILE})"
+                    elif [ "$module" == "apr-util" ]
+                    then
+                        APR_UTIL_VERSION="$(<${OUTFILE})"
+                    elif [ "$module" == "pcre" ]
+                    then
+                        PCRE_VERSION="$(<${OUTFILE})"
+                    fi
+                    ;;
+                1)
+                    exit
+                    ;;
+            esac
+            
+        else
+            local MSG="Internet Connection is required."
+            dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
 
-        exit
-    fi
-
+            exit
+        fi
     done
-
 
     Write_Log $FUNCNAME $LINENO "end"
 }

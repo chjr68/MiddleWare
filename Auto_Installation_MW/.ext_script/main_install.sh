@@ -71,6 +71,41 @@ function Check_Dir_Exist()
     Write_Log $FUNCNAME $LINENO "end"
 }
 
+function Check_Middleware_Exist()
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    if [ $MENU_OPT_MAIN_INSTALL != 5 ]
+    then
+        #파일 없으면 최초설치이므로 패스
+        if [ ! -f $VERSION ]
+        then
+            :
+        elif [ `cat $VERSION | grep $1 | wc -l` -eq 1 ]
+        then
+            MSG="Already installed. Do you want to go to main menu?"
+
+            dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --yesno "$MSG" 7 80
+
+            answer=$?
+
+            case $answer in
+                0)
+                    Show_Menu
+                    ;;
+                1)
+                    exit
+                    ;;
+            esac    
+        fi
+    fi
+
+    source /etc/profile
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
+
 function Make_Dir()
 {
     Write_Log $FUNCNAME $LINENO "start"
@@ -166,18 +201,18 @@ function Install_Apache_Apr()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    MSG="Apr Install ( $APR_VERSION )"
+    MSG="Apr Install ( apr-$APR_VERSION )"
     Progress=$(($Progress+$jump))
     echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
-    tar zxf ${g_path}/package/module/${APR_VERSION}.tar.gz -C ${g_path}/package/module
+    tar zxf ${g_path}/package/module/apr-${APR_VERSION}.tar.gz -C ${g_path}/package/module
 
-    cd ${g_path}/package/module/${APR_VERSION}
+    cd ${g_path}/package/module/apr-${APR_VERSION}
     Set_Configure --prefix=$INSTALL_PATH/apr
     Set_Make ${g_path}/trace_log/apr.log 
     Set_Make_Install ${g_path}/trace_log/apr.log
 
     #TODO: 모듈버전을 넣어야 됨.
-    echo $APR_VERSION >> $VERSION
+    echo apr-$APR_VERSION >> $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -186,17 +221,17 @@ function Install_Apache_Apr_Util()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    MSG="Apr-Util Install ( $APR_UTIL_VERSION )"
+    MSG="Apr-Util Install ( apr-util-$APR_UTIL_VERSION )"
     Progress=$(($Progress+$jump))
     echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
-    tar zxf ${g_path}/package/module/${APR_UTIL_VERSION}.tar.gz -C ${g_path}/package/module
+    tar zxf ${g_path}/package/module/apr-util-${APR_UTIL_VERSION}.tar.gz -C ${g_path}/package/module
 
-    cd ${g_path}/package/module/${APR_UTIL_VERSION}
+    cd ${g_path}/package/module/apr-util-${APR_UTIL_VERSION}
     Set_Configure "--prefix=$INSTALL_PATH/apr-util --with-apr=$INSTALL_PATH/apr"
     Set_Make ${g_path}/trace_log/apr-util.log
     Set_Make_Install ${g_path}/trace_log/apr-util.log
 
-    echo $APR_UTIL_VERSION >> $VERSION
+    echo apr-util-$APR_UTIL_VERSION >> $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -205,17 +240,17 @@ function Install_Apache_Pcre()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    MSG="Pcre Install ( $PCRE_VERSION )"
+    MSG="Pcre Install ( pcre-$PCRE_VERSION )"
     Progress=$(($Progress+$jump))
     echo $Progress | dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --gauge "Please wait...\n $MSG" 10 70 0
-    tar zxf ${g_path}/package/module/${PCRE_VERSION}.tar.gz -C ${g_path}/package/module
+    tar zxf ${g_path}/package/module/pcre-${PCRE_VERSION}.tar.gz -C ${g_path}/package/module
 
-    cd ${g_path}/package/module/${PCRE_VERSION}
+    cd ${g_path}/package/module/pcre-${PCRE_VERSION}
     Set_Configure "--prefix=$INSTALL_PATH/pcre"
     Set_Make ${g_path}/trace_log/pcre.log
     Set_Make_Install ${g_path}/trace_log/pcre.log
 
-    echo $PCRE_VERSION >> $VERSION
+    echo pcre-$PCRE_VERSION >> $VERSION
 
     Write_Log $FUNCNAME $LINENO "end"
 }
@@ -1180,6 +1215,7 @@ function Uninstall_Db_Postgresql()
         rm -rf ${INSTALL_PATH}
         rm -rf /data
         rm -rf /etc/systemd/system/postgres
+        rm -rf /etc/systemd/system/postgres.service
 
         #TODO: 경로에 '/' 포함되어 있어서 처리 필요
         sed -i '/^export PATH=/s@:'$INSTALL_PATH/$MW_DB_VERSION/bin'@''@' /etc/profile
@@ -1195,13 +1231,16 @@ function Check_Wget_Install_Version
 {
     Write_Log $FUNCNAME $LINENO "start"
 
+    #Apache 모듈 상태체크
+    MODULE_STATUS=0
+
     # 버전 분류
     major=$(echo ${INSTALL_VERSION} | cut -d'.' -f1)
     minor=$(echo ${INSTALL_VERSION} | cut -d'.' -f2)
     patch=$(echo ${INSTALL_VERSION} | cut -d'.' -f3)
 
-    # WEB
     case $MENU_OPT_MW_TYPE in
+    # WEB
     1)
         if [ $MENU_OPT_WEB_TYPE == 1 ]
         then 
@@ -1212,6 +1251,7 @@ function Check_Wget_Install_Version
             if [ $WGET_STATUS == 1 ]
             then
                 wget -NP ${g_path}/package/1.WEB/ ${URL} > /dev/null 2>&1
+                ((MODULE_STATUS+=1))
             elif [ $WGET_STATUS == 0 ]
             then
                 local MSG="${MW_WEB_VERSION} file does not exist."
@@ -1223,34 +1263,35 @@ function Check_Wget_Install_Version
             do
                 if [ "$module" == "apr" ]
                 then
-                    URL=https://dlcdn.apache.org/apr/${APR_VERSION}.tar.gz
+                    URL=https://dlcdn.apache.org/apr/apr-${APR_VERSION}.tar.gz
                     Check_Wget_Version_Exist $URL
                 elif [ "$module" == "apr-util" ]
                 then
-                    URL=https://dlcdn.apache.org/apr/${APR_UTIL_VERSION}.tar.gz
+                    URL=https://dlcdn.apache.org/apr/apr-util-${APR_UTIL_VERSION}.tar.gz
                     Check_Wget_Version_Exist $URL
                 elif [ "$module" == "pcre" ]
                 then
-                    URL=https://sourceforge.net/projects/pcre/files/pcre/${MODULE_VERSION}/${PCRE_VERSION}.tar.gz/download
+                    URL=https://sourceforge.net/projects/pcre/files/pcre/${PCRE_VERSION}/pcre-${PCRE_VERSION}.tar.gz/download
                     Check_Wget_Version_Exist $URL
                 fi
-                
+
                 if [ $WGET_STATUS == 1 ]
                 then
                     wget -NP ${g_path}/package/module/ ${URL} > /dev/null 2>&1
+                    ((MODULE_STATUS+=1))
                 elif [ $WGET_STATUS == 0 ]
                 then
-                    if [ "$moudle" == "apr" ]
+                    if [ "$module" == "apr" ]
                     then
-                        local MSG="${APR_VERSION} file does not exist."
+                        local MSG="apr-${APR_VERSION} file does not exist."
                         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
-                    elif [ "$moudle" == "apr-util" ]
+                    elif [ "$module" == "apr-util" ]
                     then
-                        local MSG="${APR_UTIL_VERSION} file does not exist."
+                        local MSG="apr-util-${APR_UTIL_VERSION} file does not exist."
                         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
-                    elif [ "$moudle" == "pcre" ]
+                    elif [ "$module" == "pcre" ]
                     then
-                        local MSG="${PCRE_VERSION} file does not exist."
+                        local MSG="pcre-${PCRE_VERSION} file does not exist."
                         dialog --title "$TITLE" --backtitle "$BACKTITLE" --msgbox "$MSG" 10 70
                     fi
                 fi
@@ -1328,10 +1369,17 @@ function Check_Wget_Install_Version
     esac
 
     #wget 버전 미 지원 시, 버전 재 입력
-    if [ $WGET_STATUS == 0 ]
+    if [ $WGET_STATUS == 0 ] || [ ! $MODULE_STATUS == 4 ]
     then
-        Input_Middleware_Version
-        Check_Wget_Install_Version
+        if [ $MENU_OPT_MW_TYPE == 1 ] 
+        then
+            Input_Middleware_Version
+            Input_Module_Version
+            Check_Wget_Install_Version
+        else
+            Input_Middleware_Version
+            Check_Wget_Install_Version
+        fi
     fi
 
     Write_Log $FUNCNAME $LINENO "end"
