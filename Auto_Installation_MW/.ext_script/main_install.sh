@@ -75,8 +75,11 @@ function Check_Middleware_Exist()
 {
     Write_Log $FUNCNAME $LINENO "start"
 
-    if [ $MENU_OPT_MAIN_INSTALL != 5 ]
+    #Show Version or Uninstall 선택 시, pass
+    if [ $MENU_OPT_MAIN_INSTALL == 2 ] || [ $MENU_OPT_MAIN_INSTALL == 5 ]
     then
+        :
+    else
         #파일 없으면 최초설치이므로 패스
         if [ ! -f $VERSION ]
         then
@@ -648,8 +651,9 @@ log-bin                         = /data/mariadb/log-bin/mysql-bin" > /etc/my.cnf
         #libsystemd-daemon
         if [ -z "`find /usr/lib -name libsystemd-daemon.so.0`" ]
         then
-            dpkg -i ${g_path}/rpms/deb/apt/db/libsystemd-daemon/systemd-libs_219-79_amd64.deb >> $RPM_LOG 2>&1
-            ln -s /usr/lib64/libsystemd-daemon.so.0 /usr/lib/x86_64-linux-gnu/libsystemd-daemon.so.0    
+            # dpkg -i ${g_path}/rpms/ubuntu/deb/apt/db/libsystemd-daemon/systemd-libs_219-79_amd64.deb >> $RPM_LOG 2>&1
+            # ln -s /usr/lib64/libsystemd-daemon.so.0 /usr/lib/x86_64-linux-gnu/libsystemd-daemon.so.0    
+            cp ${g_path}/rpms/common-lib/libtinfo/libtinfo.so.5 /lib/.
         fi
     fi
     if [ $OS_TYPE == 3 ]
@@ -1101,6 +1105,8 @@ function Uninstall_Db_Mariadb()
         rm -rf /var/log/mariadb.log
         rm -rf /etc/init.d/mariadb.service
         rm -rf /etc/systemd/system/mariadb.service
+        rm -rf /etc/systemd/system/mysql.service
+        rm -rf /etc/systemd/system/mysqld.service
         rm -rf /etc/my.cnf
         rm -rf /tmp/mysql.sock
 
@@ -1250,6 +1256,7 @@ function Check_Wget_Install_Version
 
             if [ $WGET_STATUS == 1 ]
             then
+                Show_Downloading_Message
                 wget -NP ${g_path}/package/1.WEB/ ${URL} > /dev/null 2>&1
                 ((MODULE_STATUS+=1))
             elif [ $WGET_STATUS == 0 ]
@@ -1277,6 +1284,7 @@ function Check_Wget_Install_Version
 
                 if [ $WGET_STATUS == 1 ]
                 then
+                    Show_Downloading_Message
                     wget -NP ${g_path}/package/module/ ${URL} > /dev/null 2>&1
                     ((MODULE_STATUS+=1))
                 elif [ $WGET_STATUS == 0 ]
@@ -1308,6 +1316,7 @@ function Check_Wget_Install_Version
 
             if [ $WGET_STATUS == 1 ]
             then
+                Show_Downloading_Message
                 wget -NP ${g_path}/package/2.WAS/ ${URL} > /dev/null 2>&1
             elif [ $WGET_STATUS == 0 ]
             then
@@ -1327,6 +1336,7 @@ function Check_Wget_Install_Version
 
             if [ $WGET_STATUS == 1 ]
             then
+                Show_Downloading_Message
                 wget -NP ${g_path}/package/3.DB/MariaDB/ ${URL} > /dev/null 2>&1
             elif [ $WGET_STATUS == 0 ]
             then
@@ -1342,6 +1352,7 @@ function Check_Wget_Install_Version
 
             if [ $WGET_STATUS == 1 ]
             then
+                Show_Downloading_Message
                 wget -NP ${g_path}/package/3.DB/MySQL/ ${URL} > /dev/null 2>&1
             elif [ $WGET_STATUS == 0 ]
             then
@@ -1357,6 +1368,7 @@ function Check_Wget_Install_Version
 
             if [ $WGET_STATUS == 1 ]
             then
+                Show_Downloading_Message
                 wget -NP ${g_path}/package/3.DB/PostgreSQL/ ${URL} > /dev/null 2>&1
             elif [ $WGET_STATUS == 0 ]
             then
@@ -1369,14 +1381,18 @@ function Check_Wget_Install_Version
     esac
 
     #wget 버전 미 지원 시, 버전 재 입력
-    if [ $WGET_STATUS == 0 ] || [ ! $MODULE_STATUS == 4 ]
+    if [ $MENU_OPT_MW_TYPE == 1 ] 
     then
-        if [ $MENU_OPT_MW_TYPE == 1 ] 
+        #WEB은 wget 상태+모듈 상태 모두 체크 필요
+        if [ $WGET_STATUS == 0 ] || [ ! $MODULE_STATUS == 4 ]
         then
             Input_Middleware_Version
             Input_Module_Version
             Check_Wget_Install_Version
-        else
+        fi
+    else
+        if [ $WGET_STATUS == 0 ]
+        then
             Input_Middleware_Version
             Check_Wget_Install_Version
         fi

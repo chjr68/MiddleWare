@@ -224,6 +224,15 @@ function Show_Install_Type_Menu
     Write_Log $FUNCNAME $LINENO "end"
 }
 
+function Show_Downloading_Message
+{
+    Write_Log $FUNCNAME $LINENO "start"
+
+    dialog --backtitle "${BACKTITLE}" --title "${TITLE}" --infobox "Downloading Package..." 10 70
+
+    Write_Log $FUNCNAME $LINENO "end"
+}
+
 function Select_Middleware_Version()
 {
     Write_Log $FUNCNAME $LINENO "start"
