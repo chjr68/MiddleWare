@@ -160,5 +160,3 @@ Please report bugs to me
 # AUTHOR
 
 Kim JiHwan, <chjr68@naver.com>
-
-
